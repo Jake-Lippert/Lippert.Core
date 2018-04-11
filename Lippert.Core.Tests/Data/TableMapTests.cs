@@ -1,5 +1,6 @@
 ﻿using System;
 using Lippert.Core.Collections.Extensions;
+using Lippert.Core.Configuration;
 using Lippert.Core.Data;
 using Lippert.Core.Tests.TestSchema;
 using Lippert.Core.Tests.TestSchema.Contracts;
@@ -11,6 +12,9 @@ namespace Lippert.Core.Tests.Data
 	[TestFixture]
 	public class TableMapTests
 	{
+		[OneTimeSetUp]
+		public void OneTimeSetUp() => ReflectingRegistrationSource.CodebaseNamespacePrefix = "Lippert";
+
 		private void DisplayTableMapColumns<T>(TableMap<T> tableMap)
 		{
 			foreach (var (type, columns) in tableMap.TypeColumns.AsTuples())
@@ -40,10 +44,10 @@ namespace Lippert.Core.Tests.Data
 		}
 
 		[Test]
-		public void TestCreateMapWithHelper([Values(false, true)] bool useBase, [Values(false, true)] bool accessUsingInterface)
+		public void TestCreateMapWithHelper([Values(false, true)] bool accessUsingInterface)
 		{
 			//--Act
-			var clientMap = new ClientMap(useBase);
+			var clientMap = new ClientMap();
 			DisplayTableMapColumns(clientMap);
 
 			//--Assert
@@ -84,13 +88,20 @@ namespace Lippert.Core.Tests.Data
 
 			//--Assert
 			Assert.AreEqual("InheritingComponent", inheritingComponentMap.TableName);
-			Assert.AreEqual(4, inheritingComponentMap.InstanceColumns.Count);
+			Assert.AreEqual(4, inheritingComponentMap.SelectColumns.Count);
 
 			var id = inheritingComponentMap[x => x.Id];
+			var idBase = typeof(BaseRecord).GetProperty(nameof(BaseRecord.Id));
 			Assert.AreEqual("Id", id.ColumnName);
-			Assert.AreNotEqual(typeof(BaseRecord).GetProperty(nameof(BaseRecord.Id)), id.Property);//--The base class has an Id as well, make sure the inherting record doesn't reference that property
+			Assert.AreNotEqual(idBase, id.Property);//--The base class has an Id as well, make sure the inherting record doesn't reference that property
 			Assert.AreEqual(ColumnBehavior.Key | ColumnBehavior.Generated, id.Behavior);
 			Assert.AreEqual(IgnoreBehavior.Insert | IgnoreBehavior.Update, id.IgnoreOperations);
+
+			//var id_ = inheritingComponentMap[idBase];
+			//Assert.AreEqual("Id", id_.ColumnName);
+			//Assert.AreEqual(idBase, id_.Property);
+			//Assert.AreEqual(ColumnBehavior.Key | ColumnBehavior.Generated, id_.Behavior);
+			//Assert.AreEqual(IgnoreBehavior.Insert | IgnoreBehavior.Update, id_.IgnoreOperations);
 
 			var baseId = inheritingComponentMap[x => x.BaseId];
 			Assert.AreEqual("BaseId", baseId.ColumnName);

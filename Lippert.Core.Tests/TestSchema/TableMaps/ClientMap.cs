@@ -2,22 +2,10 @@
 
 namespace Lippert.Core.Tests.TestSchema.TableMaps
 {
-	public class ClientMap : CommonColumnMapBase<Client>
+	public class ClientMap : TableMap<Client>
 	{
-		public ClientMap(bool useBase)
+		public ClientMap()
 		{
-			if (useBase)
-			{
-				MapProperties();
-			}
-			else
-			{
-				Map(x => x.CreatedByUserId).Ignore(IgnoreBehavior.Update);
-				Map(x => x.CreatedDateUtc).Generated();
-				Map(x => x.ModifiedByUserId);
-				Map(x => x.ModifiedDateUtc).Ignore(IgnoreBehavior.Insert);
-			}
-
 			AutoMap();
 		}
 	}

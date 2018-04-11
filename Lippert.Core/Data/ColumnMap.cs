@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using Lippert.Core.Data.Contracts;
 using Lippert.Core.Reflection;
 
 namespace Lippert.Core.Data
 {
-	public class ColumnMap<T>
+	public class ColumnMap<T> : IColumnMap
 	{
 		internal ColumnMap(Expression<Func<T, object>> column)
 			: this(PropertyAccessor.Get(column)) { }
@@ -18,7 +19,7 @@ namespace Lippert.Core.Data
 		public ColumnBehavior Behavior { get; private set; } = ColumnBehavior.Basic;
 		public IgnoreBehavior IgnoreOperations { get; private set; } = 0;
 
-		public ColumnMap<T> Key(bool isGenerated = true)
+		public IColumnMap Key(bool isGenerated = true)
 		{
 			if (IgnoreOperations.HasFlag(IgnoreBehavior.Select))
 			{
@@ -36,7 +37,7 @@ namespace Lippert.Core.Data
 			return this;
 		}
 
-		public ColumnMap<T> Generated()
+		public IColumnMap Generated()
 		{
 			if (IgnoreOperations.HasFlag(IgnoreBehavior.Select))
 			{
@@ -49,7 +50,7 @@ namespace Lippert.Core.Data
 			return this;
 		}
 
-		public ColumnMap<T> Ignore(IgnoreBehavior behavior = IgnoreBehavior.Insert | IgnoreBehavior.Update | IgnoreBehavior.Select)
+		public IColumnMap Ignore(IgnoreBehavior behavior = IgnoreBehavior.Insert | IgnoreBehavior.Update | IgnoreBehavior.Select)
 		{
 			if (behavior.HasFlag(IgnoreBehavior.Select))
 			{

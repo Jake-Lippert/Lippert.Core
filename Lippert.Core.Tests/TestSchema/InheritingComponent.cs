@@ -1,8 +1,9 @@
 ﻿using System;
+using Lippert.Core.Tests.TestSchema.Contracts;
 
 namespace Lippert.Core.Tests.TestSchema
 {
-	public class InheritingComponent : BaseRecord
+	public class InheritingComponent : BaseRecord, IGuidIdentifier
 	{
 		public new Guid Id { get; set; }
 		public Guid BaseId

@@ -6,7 +6,6 @@ namespace Lippert.Core.Tests.TestSchema.TableMaps
     {
 		public InheritingComponentMap()
 		{
-			Map(x => x.Id).Key();
 			Map(x => x.BaseId).Ignore(IgnoreBehavior.Update);
 			AutoMap(x => x.Category, x => x.Cost);
 		}

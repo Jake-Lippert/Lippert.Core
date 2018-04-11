@@ -7,11 +7,20 @@ namespace Lippert.Core.Collections.Extensions
 {
 	public static class IEnumerableExtensions
 	{
+		/// <summary>
+		/// Returns the sequence of KeyValuePairs as named tuples
+		/// </summary>
 		public static IEnumerable<(TKey key, TValue value)> AsTuples<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> source) =>
 			source.Select(kvp => (kvp.Key, kvp.Value));
+		/// <summary>
+		/// Returns the sequence of Groupings as named tuples
+		/// </summary>
 		public static IEnumerable<(TKey key, List<TValue> values)> AsTuples<TKey, TValue>(this IEnumerable<IGrouping<TKey, TValue>> source) =>
 			source.Select(grouping => (grouping.Key, grouping.ToList()));
 
+		/// <summary>
+		/// Projects each element of a sequence into a named tuple including the element's index
+		/// </summary>
 		public static IEnumerable<(T item, int index)> Indexed<T>(this IEnumerable<T> source) => source.Select((x, i) => (x, i));
 
 		public static Dictionary<TKey, List<T>> GroupToDictionary<T, TKey, TValue>(this IEnumerable<T> source, Func<T, TKey> keySelector) =>
@@ -25,8 +34,14 @@ namespace Lippert.Core.Collections.Extensions
 		public static Dictionary<TKey, TValue> GroupToDictionary<T, TKey, TValue>(this IEnumerable<T> source, Func<T, TKey> keySelector, Func<TKey, IEnumerable<T>, TValue> valueSelector, IEqualityComparer<TKey> comparer) =>
 			source.GroupBy(keySelector, comparer).ToDictionary(x => x.Key, x => valueSelector(x.Key, x), comparer);
 
+		/// <summary>
+		/// Sorts the elements of a sequence in ascending order by using a specified comparer
+		/// </summary>
 		public static IEnumerable<T> OrderBy<T>(this IEnumerable<T> source, IComparer<T> comparer) => source.OrderBy(x => x, comparer);
 
+		/// <summary>
+		/// Sorts the elements of a sequence in descending order by using a specified comparer
+		/// </summary>
 		public static IEnumerable<T> OrderByDescending<T>(this IEnumerable<T> source, IComparer<T> comparer) => source.OrderByDescending(x => x, comparer);
 
 		/// <summary>

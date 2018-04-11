@@ -8,11 +8,11 @@ namespace Lippert.Core.Data.QueryBuilders
 {
 	public class UpdateBuilder<T>
 	{
-		private readonly List<ColumnMap<T>> _setColumns = new List<ColumnMap<T>>(), _filterColumns = new List<ColumnMap<T>>();
+		private readonly List<IColumnMap> _setColumns = new List<IColumnMap>(), _filterColumns = new List<IColumnMap>();
 
-		internal ITableMap<T> TableMap { get; } = Data.TableMap.GetMap<T>();
+		internal ITableMap<T> TableMap { get; } = SqlServerQueryBuilder.GetTableMap<T>();
 
-		internal List<ColumnMap<T>> SetColumns => _setColumns.Any() ? _setColumns : TableMap.UpdateColumns;
+		internal List<IColumnMap> SetColumns => _setColumns.Any() ? _setColumns : TableMap.UpdateColumns;
 		public UpdateBuilder<T> Set(Expression<Func<T, object>> column)
 		{
 			var columnMap = TableMap[column ?? throw new ArgumentNullException(nameof(column))];
@@ -25,7 +25,7 @@ namespace Lippert.Core.Data.QueryBuilders
 			return this;
 		}
 
-		internal List<ColumnMap<T>> FilterColumns => _filterColumns.Any() ? _filterColumns : TableMap.KeyColumns;
+		internal List<IColumnMap> FilterColumns => _filterColumns.Any() ? _filterColumns : TableMap.KeyColumns;
 		public UpdateBuilder<T> Filter(Expression<Func<T, object>> column)
 		{
 			_filterColumns.Add(TableMap[column ?? throw new ArgumentNullException(nameof(column))]);

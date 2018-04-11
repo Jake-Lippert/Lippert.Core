@@ -1,27 +1,51 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Lippert.Core.Configuration;
 using Lippert.Core.Data.Contracts;
 
 namespace Lippert.Core.Data.QueryBuilders
 {
 	public class SqlServerQueryBuilder
-    {
-		public string SelectAll<T>()
-		{
-			var tableMap = TableMap.GetMap<T>();
+	{
+		private static readonly IDictionary<Type, ITableMap> _tableMaps;
 
-			return string.Join(Environment.NewLine,
-				$"select {string.Join(", ", tableMap.SelectColumns.Select(BuildColumnIdentifier))}",
-				$"from {BuildTableIdentifier(tableMap)}");
+		static SqlServerQueryBuilder()
+		{
+			_tableMaps = ReflectingRegistrationSource.GetCodebaseTypesAssignableTo<ITableMap>()
+				.Where(t => t.IsClass && !t.IsAbstract && !t.ContainsGenericParameters)
+				.Select(t => (ITableMap)Activator.CreateInstance(t))
+				.ToDictionary(map => map.GetModelType());
+		}
+
+		public static ITableMap<T> GetTableMap<T>() => (ITableMap<T>)_tableMaps[typeof(T)];
+
+
+		public string SelectByKey<T>() => Select(new SelectBuilder<T>().Key());
+		public string SelectAll<T>() => Select(new SelectBuilder<T>());
+		public string Select<T>(SelectBuilder<T> selectBuilder)
+		{
+			var tableMap = GetTableMap<T>();
+
+			var select = $"select {string.Join(", ", tableMap.SelectColumns.Select(BuildColumnIdentifier))}";
+			var from = $"from {BuildTableIdentifier(tableMap)}";
+
+			if (selectBuilder.FilterColumns.Any())
+			{
+				return string.Join(Environment.NewLine, select, from, BuildWhereClause(selectBuilder.FilterColumns));
+			}
+			else
+			{
+				return string.Join(Environment.NewLine, select, from);
+			}
 		}
 
 		public string Insert<T>()
 		{
-			var tableMap = TableMap.GetMap<T>();
+			var tableMap = GetTableMap<T>();
 			var insertColumns = tableMap.InsertColumns;
-			var generatedColumns = tableMap.InstanceColumns.Values.Where(c => c.Behavior.HasFlag(ColumnBehavior.Generated) ||
-				(c.IgnoreOperations.HasFlag(IgnoreBehavior.Insert) && !c.IgnoreOperations.HasFlag(IgnoreBehavior.Select))).ToList();
+			var generatedColumns = tableMap.GeneratedColumns;
 
 			var insert = $"insert into {BuildTableIdentifier(tableMap)}({string.Join(", ", insertColumns.Select(BuildColumnIdentifier))})";
 			var values = $"values({string.Join(", ", insertColumns.Select(BuildColumnParameter))})";
@@ -45,11 +69,12 @@ namespace Lippert.Core.Data.QueryBuilders
 		public string Update<T>(UpdateBuilder<T> updateBuilder) => string.Join(Environment.NewLine,
 			$"update {BuildTableIdentifier(updateBuilder.TableMap)}",
 			$"set {string.Join(", ", updateBuilder.SetColumns.Select(BuildColumnEquals))}",
-			$"where {string.Join(" and ", updateBuilder.FilterColumns.Select(BuildColumnEquals))}");
+			BuildWhereClause(updateBuilder.FilterColumns));
 
-		public string BuildTableIdentifier<T>(ITableMap<T> table) => $"[{table.TableName}]";
-		public string BuildColumnIdentifier<T>(ColumnMap<T> column) => $"[{column.ColumnName}]";
-		public string BuildColumnParameter<T>(ColumnMap<T> column) => $"@{column.ColumnName}";
-		public string BuildColumnEquals<T>(ColumnMap<T> column) => $"{BuildColumnIdentifier(column)} = {BuildColumnParameter(column)}";
+		public string BuildTableIdentifier(ITableMap table) => $"[{table.TableName}]";
+		public string BuildColumnIdentifier(IColumnMap column) => $"[{column.ColumnName}]";
+		public string BuildColumnParameter(IColumnMap column) => $"@{column.ColumnName}";
+		public string BuildColumnEquals(IColumnMap column) => $"{BuildColumnIdentifier(column)} = {BuildColumnParameter(column)}";
+		public string BuildWhereClause(IEnumerable<IColumnMap> columns) => $"where {string.Join(" and ", columns.Select(BuildColumnEquals))}";
 	}
 }

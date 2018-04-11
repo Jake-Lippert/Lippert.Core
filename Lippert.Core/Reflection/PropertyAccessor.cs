@@ -9,6 +9,9 @@ namespace Lippert.Core.Reflection
 	/// <seealso cref="https://stackoverflow.com/a/3285867/595473"/>
 	public static class PropertyAccessor
 	{
+		/// <summary>
+		/// Get the property info for a property specified by an expression
+		/// </summary>
 		public static PropertyInfo Get<T>(Expression<Func<T, object>> selector)
 		{
 			if (selector is LambdaExpression lambda)
@@ -42,7 +45,13 @@ namespace Lippert.Core.Reflection
 			}
 		}
 
+		/// <summary>
+		/// Get an interface's version of a class's property or a class's version of an interface's property
+		/// </summary>
 		public static PropertyInfo Get<TTarget>(PropertyInfo property) => Get(property, typeof(TTarget));
+		/// <summary>
+		/// Get an interface's version of a class's property or a class's version of an interface's property
+		/// </summary>
 		public static PropertyInfo Get(PropertyInfo property, Type targetType)
 		{
 			MethodInfo targetMethod = default;
@@ -56,6 +65,7 @@ namespace Lippert.Core.Reflection
 
 				var mapping = property.DeclaringType.GetInterfaceMap(targetType);
 
+				//--Get the interface's version of a class's property
 				targetMethod = mapping.TargetMethods.Zip(mapping.InterfaceMethods, (target, @interface) => (target, @interface))
 					.FirstOrDefault(x => x.target == getter).@interface;
 			}
@@ -68,6 +78,7 @@ namespace Lippert.Core.Reflection
 
 				var mapping = targetType.GetInterfaceMap(property.DeclaringType);
 
+				//--Get the class's version of an interface's property
 				targetMethod = mapping.InterfaceMethods.Zip(mapping.TargetMethods, (@interface, target) => (@interface, target))
 					.FirstOrDefault(x => x.@interface == getter).target;
 			}

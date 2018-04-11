@@ -54,13 +54,13 @@ namespace Lippert.Core.Configuration
 		/// <summary>
 		/// Builds a list of the types in our codebase that can be assigned to the specified type.
 		/// </summary>
-		public static List<TypeInfo> GetCodebaseTypesAssignableTo<T>()
-		{
-			var targetType = typeof(T);
-			return GetAllCodebaseAssemblies()
-				.SelectMany(a => a.DefinedTypes)
-				.Where(targetType.IsAssignableFrom)
-				.ToList();
-		}
+		public static List<TypeInfo> GetCodebaseTypesAssignableTo<T>() => GetCodebaseTypesAssignableTo(typeof(T));
+		/// <summary>
+		/// Builds a list of the types in our codebase that can be assigned to the specified type.
+		/// </summary>
+		public static List<TypeInfo> GetCodebaseTypesAssignableTo(Type targetType) => GetAllCodebaseAssemblies()
+			.SelectMany(a => a.DefinedTypes)
+			.Where(targetType.IsAssignableFrom)
+			.ToList();
 	}
 }

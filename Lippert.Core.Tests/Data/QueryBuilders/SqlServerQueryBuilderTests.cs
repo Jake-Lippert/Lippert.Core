@@ -1,8 +1,7 @@
 ﻿using System;
-using Lippert.Core.Data;
+using Lippert.Core.Configuration;
 using Lippert.Core.Data.QueryBuilders;
 using Lippert.Core.Tests.TestSchema;
-using Lippert.Core.Tests.TestSchema.TableMaps;
 using NUnit.Framework;
 
 namespace Lippert.Core.Tests.Data.QueryBuilders
@@ -11,15 +10,40 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 	public class SqlServerQueryBuilderTests
 	{
 		[OneTimeSetUp]
-		public void OneTimeSetUp()
+		public void OneTimeSetUp() => ReflectingRegistrationSource.CodebaseNamespacePrefix = "Lippert";
+
+		[Test]
+		public void TestBuildsSelectByKeyQuerySingle()
 		{
-			TableMap.SetMap(new ClientMap(true));
-			TableMap.SetMap(new UserMap());
-			TableMap.SetMap(new ClientUserMap());
+			//--Act
+			var query = new SqlServerQueryBuilder().SelectByKey<Client>();
+
+			//--Assert
+			Console.WriteLine(query);
+			var queryLines = query.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+			Assert.AreEqual(3, queryLines.Length);
+			Assert.AreEqual("select [Id], [CreatedByUserId], [CreatedDateUtc], [ModifiedByUserId], [ModifiedDateUtc], [Name], [IsActive]", queryLines[0]);
+			Assert.AreEqual("from [Client]", queryLines[1]);
+			Assert.AreEqual("where [Id] = @Id", queryLines[2]);
 		}
 
 		[Test]
-		public void TestBuildsSelectQuery()
+		public void TestBuildsSelectByKeyQueryMultiple()
+		{
+			//--Act
+			var query = new SqlServerQueryBuilder().SelectByKey<ClientUser>();
+
+			//--Assert
+			Console.WriteLine(query);
+			var queryLines = query.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+			Assert.AreEqual(3, queryLines.Length);
+			Assert.AreEqual("select [ClientId], [UserId], [IsActive]", queryLines[0]);
+			Assert.AreEqual("from [Client_User]", queryLines[1]);
+			Assert.AreEqual("where [ClientId] = @ClientId and [UserId] = @UserId", queryLines[2]);
+		}
+
+		[Test]
+		public void TestBuildsSelectAllQuery()
 		{
 			//--Act
 			var query = new SqlServerQueryBuilder().SelectAll<Client>();
@@ -27,8 +51,25 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 			//--Assert
 			Console.WriteLine(query);
 			var queryLines = query.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+			Assert.AreEqual(2, queryLines.Length);
 			Assert.AreEqual("select [Id], [CreatedByUserId], [CreatedDateUtc], [ModifiedByUserId], [ModifiedDateUtc], [Name], [IsActive]", queryLines[0]);
 			Assert.AreEqual("from [Client]", queryLines[1]);
+		}
+
+		[Test]
+		public void TestBuildsSelectQueryWithBuilder()
+		{
+			//--Act
+			var query = new SqlServerQueryBuilder().Select(new SelectBuilder<Client>()
+				.Filter(x => x.IsActive));
+
+			//--Assert
+			Console.WriteLine(query);
+			var queryLines = query.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+			Assert.AreEqual(3, queryLines.Length);
+			Assert.AreEqual("select [Id], [CreatedByUserId], [CreatedDateUtc], [ModifiedByUserId], [ModifiedDateUtc], [Name], [IsActive]", queryLines[0]);
+			Assert.AreEqual("from [Client]", queryLines[1]);
+			Assert.AreEqual("where [IsActive] = @IsActive", queryLines[2]);
 		}
 
 		[Test]
@@ -40,6 +81,7 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 			//--Assert
 			Console.WriteLine(query);
 			var queryLines = query.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+			Assert.AreEqual(3, queryLines.Length);
 			Assert.AreEqual("insert into [Client]([CreatedByUserId], [ModifiedByUserId], [Name], [IsActive])", queryLines[0]);
 			Assert.AreEqual("ouput inserted.[Id], inserted.[CreatedDateUtc], inserted.[ModifiedDateUtc]", queryLines[1]);
 			Assert.AreEqual("values(@CreatedByUserId, @ModifiedByUserId, @Name, @IsActive)", queryLines[2]);
@@ -54,6 +96,7 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 			//--Assert
 			Console.WriteLine(query);
 			var queryLines = query.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+			Assert.AreEqual(2, queryLines.Length);
 			Assert.AreEqual("insert into [Client_User]([ClientId], [UserId], [IsActive])", queryLines[0]);
 			Assert.AreEqual("values(@ClientId, @UserId, @IsActive)", queryLines[1]);
 		}
@@ -67,6 +110,7 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 			//--Assert
 			Console.WriteLine(query);
 			var queryLines = query.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+			Assert.AreEqual(3, queryLines.Length);
 			Assert.AreEqual("update [Client]", queryLines[0]);
 			Assert.AreEqual("set [ModifiedByUserId] = @ModifiedByUserId, [ModifiedDateUtc] = @ModifiedDateUtc, [Name] = @Name, [IsActive] = @IsActive", queryLines[1]);
 			Assert.AreEqual("where [Id] = @Id", queryLines[2]);
@@ -81,6 +125,7 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 			//--Assert
 			Console.WriteLine(query);
 			var queryLines = query.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+			Assert.AreEqual(3, queryLines.Length);
 			Assert.AreEqual("update [Client]", queryLines[0]);
 			Assert.AreEqual("set [ModifiedByUserId] = @ModifiedByUserId", queryLines[1]);
 			Assert.AreEqual("where [Id] = @Id", queryLines[2]);
@@ -97,6 +142,7 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 			//--Assert
 			Console.WriteLine(query);
 			var queryLines = query.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+			Assert.AreEqual(3, queryLines.Length);
 			Assert.AreEqual("update [Client]", queryLines[0]);
 			Assert.AreEqual("set [ModifiedDateUtc] = @ModifiedDateUtc", queryLines[1]);
 			Assert.AreEqual("where [CreatedByUserId] = @CreatedByUserId", queryLines[2]);

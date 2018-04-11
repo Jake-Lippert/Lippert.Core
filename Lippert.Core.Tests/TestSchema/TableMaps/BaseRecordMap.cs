@@ -6,7 +6,6 @@ namespace Lippert.Core.Tests.TestSchema.TableMaps
     {
 		public BaseRecordMap()
 		{
-			Map(x => x.Id).Key();
 			AutoMap();
 		}
     }
