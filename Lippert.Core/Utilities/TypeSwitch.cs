@@ -64,7 +64,7 @@ namespace Lippert.Core.Utilities
 			/// Executes the specified piece of code when none of the other cases handles the specified type.
 			/// </summary>
 			/// <param name="func">The action to execute.</param>
-			public TReturn Default(Func<TReturn> func) => Default(x => func());
+			public TReturn Default(Func<TReturn> func) => Default(x => (func ?? throw new ArgumentNullException(nameof(func)))());
 
 			/// <summary>
 			/// Executes the specified piece of code when none of the other cases handles the specified type.
@@ -80,6 +80,9 @@ namespace Lippert.Core.Utilities
 				return (func ?? throw new ArgumentNullException(nameof(func)))(_value);
 			}
 
+			/// <summary>
+			/// Throws an exception when none of the other cases handles the specified type.
+			/// </summary>
 			public TReturn Result() => Default(() => throw new InvalidOperationException($"{nameof(Result)}() was called on a {nameof(TypeSwitch)} 'block' which had no matching {nameof(Case)} statements."));
 		}
 	}

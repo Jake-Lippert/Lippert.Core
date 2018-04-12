@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using Lippert.Core.Configuration;
+using Lippert.Core.Collections;
+using Lippert.Core.Collections.Extensions;
 using Lippert.Core.Data.Contracts;
 
 namespace Lippert.Core.Data.QueryBuilders
@@ -13,10 +14,8 @@ namespace Lippert.Core.Data.QueryBuilders
 
 		static SqlServerQueryBuilder()
 		{
-			_tableMaps = ReflectingRegistrationSource.GetCodebaseTypesAssignableTo<ITableMap>()
-				.Where(t => t.IsClass && !t.IsAbstract && !t.ContainsGenericParameters)
-				.Select(t => (ITableMap)Activator.CreateInstance(t))
-				.ToDictionary(map => map.GetModelType());
+			_tableMaps = RetrievalDictionary.Build((Type type) => TableMapSource.GetTableMap(type));
+			_tableMaps.AddRange(TableMapSource.GetTableMaps(), x => x.GetModelType());
 		}
 
 		public static ITableMap<T> GetTableMap<T>() => (ITableMap<T>)_tableMaps[typeof(T)];

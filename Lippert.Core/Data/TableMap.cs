@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Lippert.Core.Collections.Extensions;
-using Lippert.Core.Configuration;
 using Lippert.Core.Data.Contracts;
 using Lippert.Core.Reflection;
 
@@ -23,19 +22,14 @@ namespace Lippert.Core.Data
 		public TableMap()
 		{
 			Table(typeof(T).Name);
-			//--Keep track of what properties orders are within the class, as TableMapBuilders aren't applied in any specific order
+			//--Keep track of what properties' orders are within the class, as TableMapBuilders aren't applied in any specific order
 			_propertyOrder = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.Public | BindingFlags.NonPublic)
 				.Indexed()
 				.ToDictionary(x => x.item, x => x.index);
 			TypeColumns = new ReadOnlyDictionary<Type, Dictionary<PropertyInfo, IColumnMap>>(GetTypes(typeof(T)).Distinct()
 				.ToDictionary(t => t, t => new Dictionary<PropertyInfo, IColumnMap>()));
 
-			var mapBuilders = ReflectingRegistrationSource.GetCodebaseTypesAssignableTo<ITableMapBuilder>()
-				.Where(t => t.IsClass && !t.IsAbstract && !t.ContainsGenericParameters)
-				.Select(t => (ITableMapBuilder)Activator.CreateInstance(t))
-				.Where(mb => mb.HandlesType<T>())
-				.ToList();
-			foreach (var mapBuilder in mapBuilders)
+			foreach (var mapBuilder in TableMapSource.GetTableMapBuilders<T>())
 			{
 				//--I really hate having to do this...
 				mapBuilder.GetType()
