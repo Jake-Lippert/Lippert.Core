@@ -8,12 +8,12 @@ namespace Lippert.Core.Data.Contracts
 		string ColumnName { get; }
 
 		ColumnBehavior Behavior { get; }
-		IgnoreBehavior IgnoreOperations { get; }
+		SqlOperation IgnoreOperations { get; }
 
 		IColumnMap Key(bool isGenerated = true);
 
 		IColumnMap Generated();
 
-		IColumnMap Ignore(IgnoreBehavior behavior = IgnoreBehavior.Insert | IgnoreBehavior.Update | IgnoreBehavior.Select);
+		IColumnMap Ignore(SqlOperation behavior = SqlOperation.Insert | SqlOperation.Update | SqlOperation.Select);
 	}
 }

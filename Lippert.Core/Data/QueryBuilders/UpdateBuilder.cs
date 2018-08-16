@@ -6,13 +6,11 @@ using Lippert.Core.Data.Contracts;
 
 namespace Lippert.Core.Data.QueryBuilders
 {
-	public class UpdateBuilder<T>
+	public class UpdateBuilder<T> : PredicateBuilder<T>
 	{
-		private readonly List<IColumnMap> _setColumns = new List<IColumnMap>(), _filterColumns = new List<IColumnMap>();
-
-		internal ITableMap<T> TableMap { get; } = SqlServerQueryBuilder.GetTableMap<T>();
-
-		internal List<IColumnMap> SetColumns => _setColumns.Any() ? _setColumns : TableMap.UpdateColumns;
+		private readonly List<IColumnMap> _setColumns = new List<IColumnMap>();
+		
+		public List<IColumnMap> SetColumns => _setColumns.Any() ? _setColumns : TableMap.UpdateColumns;
 		public UpdateBuilder<T> Set(Expression<Func<T, object>> column)
 		{
 			var columnMap = TableMap[column ?? throw new ArgumentNullException(nameof(column))];
@@ -24,12 +22,35 @@ namespace Lippert.Core.Data.QueryBuilders
 			_setColumns.Add(columnMap);
 			return this;
 		}
-
-		internal List<IColumnMap> FilterColumns => _filterColumns.Any() ? _filterColumns : TableMap.KeyColumns;
-		public UpdateBuilder<T> Filter(Expression<Func<T, object>> column)
+		public UpdateBuilder<T> Set(Expression<Func<T, object>> column, object value)
 		{
-			_filterColumns.Add(TableMap[column ?? throw new ArgumentNullException(nameof(column))]);
+			var columnMap = TableMap[column ?? throw new ArgumentNullException(nameof(column))];
+			if (!TableMap.UpdateColumns.Contains(columnMap))
+			{
+				throw new ArgumentException($"The column '{columnMap.ColumnName}' is not available for updates.", nameof(column));
+			}
+
+			_setColumns.Add(new ValuedColumnMap(columnMap, value));
 			return this;
 		}
+
+		public new UpdateBuilder<T> Key()
+		{
+			base.Key();
+			return this;
+		}
+		public UpdateBuilder<T> Key<TKey>(TKey key)
+		{
+			base.Key(key);
+			return this;
+		}
+
+		public new UpdateBuilder<T> Filter(Expression<Func<T, object>> column, object value = default)
+		{
+			base.Filter(column, value);
+			return this;
+		}
+
+		public bool UnderscoreRequired => GetFilterColumns(true).Select(fc => fc.ColumnName).Intersect(SetColumns.Select(sc => sc.ColumnName)).Any();
 	}
 }

@@ -34,6 +34,15 @@ namespace Lippert.Core.Collections.Extensions
 		public static Dictionary<TKey, TValue> GroupToDictionary<T, TKey, TValue>(this IEnumerable<T> source, Func<T, TKey> keySelector, Func<TKey, IEnumerable<T>, TValue> valueSelector, IEqualityComparer<TKey> comparer) =>
 			source.GroupBy(keySelector, comparer).ToDictionary(x => x.Key, x => valueSelector(x.Key, x), comparer);
 
+		public static IEnumerable<TResult> LeftJoin<TLeft, TRight, TKey, TResult>(this IEnumerable<TLeft> left, IEnumerable<TRight> right,
+			Func<TLeft, TKey> leftKeySelector, Func<TRight, TKey> rightKeySelector,
+			Func<TLeft, TRight, TResult> resultSelector) =>
+			from l in left
+			join r in right
+				on leftKeySelector(l) equals rightKeySelector(r) into joined
+			from j in joined.DefaultIfEmpty()
+			select resultSelector(l, j);
+
 		/// <summary>
 		/// Sorts the elements of a sequence in ascending order by using a specified comparer
 		/// </summary>
@@ -43,6 +52,11 @@ namespace Lippert.Core.Collections.Extensions
 		/// Sorts the elements of a sequence in descending order by using a specified comparer
 		/// </summary>
 		public static IEnumerable<T> OrderByDescending<T>(this IEnumerable<T> source, IComparer<T> comparer) => source.OrderByDescending(x => x, comparer);
+
+		public static IEnumerable<TResult> RightJoin<TLeft, TRight, TKey, TResult>(this IEnumerable<TLeft> left, IEnumerable<TRight> right,
+			Func<TLeft, TKey> leftKeySelector, Func<TRight, TKey> rightKeySelector,
+			Func<TLeft, TRight, TResult> resultSelector) =>
+			right.LeftJoin(left, rightKeySelector, leftKeySelector, (r, l) => resultSelector(l, r));
 
 		/// <summary>
 		/// Builds a DataTable using the properties on the specified object

@@ -17,17 +17,17 @@ namespace Lippert.Core.Data
 		public string ColumnName { get; }
 
 		public ColumnBehavior Behavior { get; private set; } = ColumnBehavior.Basic;
-		public IgnoreBehavior IgnoreOperations { get; private set; } = 0;
+		public SqlOperation IgnoreOperations { get; private set; } = 0;
 
 		public IColumnMap Key(bool isGenerated = true)
 		{
-			if (IgnoreOperations.HasFlag(IgnoreBehavior.Select))
+			if (IgnoreOperations.HasFlag(SqlOperation.Select))
 			{
 				throw new InvalidOperationException($"Column '{ColumnName}' cannot be a key because select operations are ignored.");
 			}
 
 			Behavior |= ColumnBehavior.Key;
-			IgnoreOperations |= IgnoreBehavior.Update;
+			IgnoreOperations |= SqlOperation.Update;
 
 			if (isGenerated)
 			{
@@ -39,20 +39,20 @@ namespace Lippert.Core.Data
 
 		public IColumnMap Generated()
 		{
-			if (IgnoreOperations.HasFlag(IgnoreBehavior.Select))
+			if (IgnoreOperations.HasFlag(SqlOperation.Select))
 			{
 				throw new InvalidOperationException($"Column '{ColumnName}' cannot be generated because select operations are ignored.");
 			}
 			
 			Behavior |= ColumnBehavior.Generated;
-			IgnoreOperations |= IgnoreBehavior.Insert | IgnoreBehavior.Update;
+			IgnoreOperations |= SqlOperation.Insert | SqlOperation.Update;
 
 			return this;
 		}
 
-		public IColumnMap Ignore(IgnoreBehavior behavior = IgnoreBehavior.Insert | IgnoreBehavior.Update | IgnoreBehavior.Select)
+		public IColumnMap Ignore(SqlOperation behavior = SqlOperation.Insert | SqlOperation.Update | SqlOperation.Select)
 		{
-			if (behavior.HasFlag(IgnoreBehavior.Select))
+			if (behavior.HasFlag(SqlOperation.Select))
 			{
 				if (Behavior.HasFlag(ColumnBehavior.Key))
 				{
@@ -68,5 +68,8 @@ namespace Lippert.Core.Data
 
 			return this;
 		}
+
+
+		public override string ToString() => $"{typeof(T).Name}: {Property.DeclaringType.Name}.{Property.Name}";
 	}
 }

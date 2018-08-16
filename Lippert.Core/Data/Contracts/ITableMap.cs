@@ -10,7 +10,7 @@ namespace Lippert.Core.Data.Contracts
 		/// <summary>
 		/// Gets the model type for the table being mapped
 		/// </summary>
-		Type GetModelType();
+		Type ModelType { get; }
 
 		/// <summary>
 		/// Gets the name of the table that is being mapped
@@ -21,6 +21,11 @@ namespace Lippert.Core.Data.Contracts
 		/// Sets the name of the table that is being mapped
 		/// </summary>
 		void Table(string name);
+		
+		/// <summary>
+		/// Gets the columns that are mapped for the current table type
+		/// </summary>
+		Dictionary<PropertyInfo, IColumnMap> InstanceColumns { get; }
 
 		/// <summary>
 		/// Gets the columns that are available for insert operations
@@ -66,7 +71,7 @@ namespace Lippert.Core.Data.Contracts
 		/// Maps unmapped properties as specified
 		/// </summary>
 		/// <param name="configureColumn"></param>
-		void AutoMap(Action<IColumnMap> configureColumn);
+		void AutoMap(Action<Type, IColumnMap> configureColumn);
 	}
 	public interface ITableMap<T> : ITableMap
 	{

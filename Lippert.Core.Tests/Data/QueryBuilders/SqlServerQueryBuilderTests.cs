@@ -60,7 +60,7 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 		public void TestBuildsSelectQueryWithBuilder()
 		{
 			//--Act
-			var query = new SqlServerQueryBuilder().Select(new SelectBuilder<Client>()
+			var query = new SqlServerQueryBuilder().Select(new PredicateBuilder<Client>()
 				.Filter(x => x.IsActive));
 
 			//--Assert

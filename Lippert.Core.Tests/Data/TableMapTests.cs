@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Lippert.Core.Collections.Extensions;
 using Lippert.Core.Configuration;
 using Lippert.Core.Data;
@@ -40,7 +42,7 @@ namespace Lippert.Core.Tests.Data
 			var id = userMap[x => x.Id];
 			Assert.AreEqual("Id", id.ColumnName);
 			Assert.AreEqual(ColumnBehavior.Key | ColumnBehavior.Generated, id.Behavior);
-			Assert.AreEqual(IgnoreBehavior.Insert | IgnoreBehavior.Update, id.IgnoreOperations);
+			Assert.AreEqual(SqlOperation.Insert | SqlOperation.Update, id.IgnoreOperations);
 		}
 
 		[Test]
@@ -56,27 +58,27 @@ namespace Lippert.Core.Tests.Data
 			var id = clientMap[typeof(IGuidIdentifier).GetProperty(nameof(IGuidIdentifier.Id))];
 			Assert.AreEqual("Id", id.ColumnName);
 			Assert.AreEqual(ColumnBehavior.Key | ColumnBehavior.Generated, id.Behavior);
-			Assert.AreEqual(IgnoreBehavior.Insert | IgnoreBehavior.Update, id.IgnoreOperations);
+			Assert.AreEqual(SqlOperation.Insert | SqlOperation.Update, id.IgnoreOperations);
 
 			var createdByUserId = clientMap[(accessUsingInterface ? typeof(ICreateFields) : typeof(Client)).GetProperty(nameof(Client.CreatedByUserId))];
 			Assert.AreEqual("CreatedByUserId", createdByUserId.ColumnName);
 			Assert.AreEqual(ColumnBehavior.Basic, createdByUserId.Behavior);
-			Assert.AreEqual(IgnoreBehavior.Update, createdByUserId.IgnoreOperations);
+			Assert.AreEqual(SqlOperation.Update, createdByUserId.IgnoreOperations);
 
 			var createdDateUtc = clientMap[(accessUsingInterface ? typeof(ICreateFields) : typeof(Client)).GetProperty(nameof(Client.CreatedDateUtc))];
 			Assert.AreEqual("CreatedDateUtc", createdDateUtc.ColumnName);
 			Assert.AreEqual(ColumnBehavior.Generated, createdDateUtc.Behavior);
-			Assert.AreEqual(IgnoreBehavior.Insert | IgnoreBehavior.Update, createdDateUtc.IgnoreOperations);
+			Assert.AreEqual(SqlOperation.Insert | SqlOperation.Update, createdDateUtc.IgnoreOperations);
 
 			var modifiedByUserId = clientMap[(accessUsingInterface ? typeof(IEditFields) : typeof(Client)).GetProperty(nameof(Client.ModifiedByUserId))];
 			Assert.AreEqual("ModifiedByUserId", modifiedByUserId.ColumnName);
 			Assert.AreEqual(ColumnBehavior.Basic, modifiedByUserId.Behavior);
-			Assert.AreEqual((IgnoreBehavior)0, modifiedByUserId.IgnoreOperations);
+			Assert.AreEqual((SqlOperation)0, modifiedByUserId.IgnoreOperations);
 
 			var modifiedDateUtc = clientMap[(accessUsingInterface ? typeof(IEditFields) : typeof(Client)).GetProperty(nameof(Client.ModifiedDateUtc))];
 			Assert.AreEqual("ModifiedDateUtc", modifiedDateUtc.ColumnName);
 			Assert.AreEqual(ColumnBehavior.Basic, modifiedDateUtc.Behavior);
-			Assert.AreEqual(IgnoreBehavior.Insert, modifiedDateUtc.IgnoreOperations);
+			Assert.AreEqual(SqlOperation.Insert, modifiedDateUtc.IgnoreOperations);
 		}
 
 		[Test]
@@ -95,28 +97,65 @@ namespace Lippert.Core.Tests.Data
 			Assert.AreEqual("Id", id.ColumnName);
 			Assert.AreNotEqual(idBase, id.Property);//--The base class has an Id as well, make sure the inherting record doesn't reference that property
 			Assert.AreEqual(ColumnBehavior.Key | ColumnBehavior.Generated, id.Behavior);
-			Assert.AreEqual(IgnoreBehavior.Insert | IgnoreBehavior.Update, id.IgnoreOperations);
-
-			//var id_ = inheritingComponentMap[idBase];
-			//Assert.AreEqual("Id", id_.ColumnName);
-			//Assert.AreEqual(idBase, id_.Property);
-			//Assert.AreEqual(ColumnBehavior.Key | ColumnBehavior.Generated, id_.Behavior);
-			//Assert.AreEqual(IgnoreBehavior.Insert | IgnoreBehavior.Update, id_.IgnoreOperations);
+			Assert.AreEqual(SqlOperation.Insert | SqlOperation.Update, id.IgnoreOperations);
 
 			var baseId = inheritingComponentMap[x => x.BaseId];
 			Assert.AreEqual("BaseId", baseId.ColumnName);
 			Assert.AreEqual(ColumnBehavior.Basic, baseId.Behavior);
-			Assert.AreEqual(IgnoreBehavior.Update, baseId.IgnoreOperations);
+			Assert.AreEqual(SqlOperation.Update, baseId.IgnoreOperations);
 
 			var category = inheritingComponentMap[x => x.Category];
 			Assert.AreEqual("Category", category.ColumnName);
 			Assert.AreEqual(ColumnBehavior.Basic, category.Behavior);
-			Assert.AreEqual((IgnoreBehavior)0, category.IgnoreOperations);
+			Assert.AreEqual((SqlOperation)0, category.IgnoreOperations);
 
 			var cost = inheritingComponentMap[x => x.Cost];
 			Assert.AreEqual("Cost", cost.ColumnName);
 			Assert.AreEqual(ColumnBehavior.Basic, cost.Behavior);
-			Assert.AreEqual((IgnoreBehavior)0, cost.IgnoreOperations);
+			Assert.AreEqual((SqlOperation)0, cost.IgnoreOperations);
+
+			var generated = inheritingComponentMap.GeneratedColumns.Single();
+			Assert.AreEqual("Id", generated.ColumnName);
+			Assert.AreEqual(ColumnBehavior.Generated | ColumnBehavior.Key, generated.Behavior);
+			Assert.AreEqual(SqlOperation.Insert | SqlOperation.Update, generated.IgnoreOperations);
+		}
+
+		[Test]
+		public void TestCreateMapForInheritingClass([Values(false, true)] bool includeBaseProperties)
+		{
+			//--Act
+			var employeeMap = new EmployeeMap(includeBaseProperties);
+			DisplayTableMapColumns(employeeMap);
+
+			//--Assert
+			Assert.AreEqual("Employee", employeeMap.TableName);
+
+			if (includeBaseProperties)
+			{
+				TestId();
+			}
+			else
+			{
+				Assert.Throws<KeyNotFoundException>(() => TestId(), "Id should not be mapped");
+			}
+
+			void TestId()
+			{
+				var id = employeeMap[x => x.Id];
+				Assert.AreEqual("Id", id.ColumnName);
+				Assert.AreEqual(ColumnBehavior.Key | ColumnBehavior.Generated, id.Behavior);
+				Assert.AreEqual(SqlOperation.Insert | SqlOperation.Update, id.IgnoreOperations);
+			}
+
+			var userId = employeeMap[x => x.UserId];
+			Assert.AreEqual("UserId", userId.ColumnName);
+			Assert.AreEqual(ColumnBehavior.Key, userId.Behavior);
+			Assert.AreEqual(SqlOperation.Update, userId.IgnoreOperations);
+
+			var companyId = employeeMap[x => x.CompanyId];
+			Assert.AreEqual("CompanyId", companyId.ColumnName);
+			Assert.AreEqual(ColumnBehavior.Basic, companyId.Behavior);
+			Assert.AreEqual(SqlOperation.None, companyId.IgnoreOperations);
 		}
 	}
 }

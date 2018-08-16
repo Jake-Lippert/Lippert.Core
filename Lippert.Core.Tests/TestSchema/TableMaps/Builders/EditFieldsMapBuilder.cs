@@ -9,7 +9,7 @@ namespace Lippert.Core.Tests.TestSchema.TableMaps.Builders
 		public override void Map<TRecord>(ITableMap<TRecord> tableMap)
 		{
 			tableMap.Map(x => x.ModifiedByUserId);
-			tableMap.Map(x => x.ModifiedDateUtc).Ignore(IgnoreBehavior.Insert);
+			tableMap.Map(x => x.ModifiedDateUtc).Ignore(SqlOperation.Insert);
 		}
 	}
 }

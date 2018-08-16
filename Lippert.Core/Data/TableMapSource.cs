@@ -11,7 +11,7 @@ namespace Lippert.Core.Data
 		public static ITableMap<T> GetTableMap<T>() => (ITableMap<T>)GetTableMap(typeof(T));
 
 		public static ITableMap GetTableMap(Type type) => GetTableMaps()
-			.Where(x => x.GetModelType() == type)
+			.Where(x => x.ModelType == type)
 			.Single();
 
 		public static List<ITableMap> GetTableMaps() =>

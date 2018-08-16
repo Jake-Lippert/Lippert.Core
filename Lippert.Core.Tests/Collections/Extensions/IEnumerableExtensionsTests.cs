@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Lippert.Core.Collections.Extensions;
 using NUnit.Framework;
 
@@ -7,6 +8,92 @@ namespace Lippert.Core.Tests.Collections.Extensions
 	[TestFixture]
     public class IEnumerableExtensionsTests
 	{
+		[Test]
+		public void TestLeftJoin()
+		{
+			//--Arrange
+			var left = Enumerable.Range(0, 10).Select(x => (x, nameL: x.ToString())).ToList();
+			var right = Enumerable.Range(5, 10).Select(x => (x, nameR: x.ToString())).ToList();
+
+			//--Act
+			var joined = left.LeftJoin(right, l => l.x, r => r.x, (l, r) => (l.x, l.nameL, r.nameR))
+				.ToDictionary(lr => lr.x, lr => (lr.nameL, lr.nameR));
+
+			//--Assert
+			Assert.AreEqual(10, joined.Count);
+			foreach (var key in Enumerable.Range(0, 10))
+			{
+				Assert.IsTrue(joined.TryGetValue(key, out var lr));
+				Assert.AreEqual(key.ToString(), lr.nameL);
+				Assert.AreEqual(key < 5 ? null : key.ToString(), lr.nameR);
+			}
+		}
+
+		[Test]
+		public void TestRightJoin()
+		{
+			//--Arrange
+			var left = Enumerable.Range(5, 10).Select(x => (x, nameL: x.ToString())).ToList();
+			var right = Enumerable.Range(0, 10).Select(x => (x, nameR: x.ToString())).ToList();
+
+			//--Act
+			var joined = left.RightJoin(right, l => l.x, r => r.x, (l, r) => (r.x, l.nameL, r.nameR))
+				.ToDictionary(lr => lr.x, lr => (lr.nameL, lr.nameR));
+
+			//--Assert
+			Assert.AreEqual(10, joined.Count);
+			foreach (var key in Enumerable.Range(0, 10))
+			{
+				Assert.IsTrue(joined.TryGetValue(key, out var lr));
+				Assert.AreEqual(key.ToString(), lr.nameR);
+				Assert.AreEqual(key < 5 ? null : key.ToString(), lr.nameL);
+			}
+		}
+
+
+		[Test]
+		public void TestCustomOrdering()
+		{
+			//--Arrange
+			var random = new Random();
+			var scrambled = Enumerable.Range(0, 52).Select(x => 'A' + 32 * (x / 26) + x % 26).Join(
+				Enumerable.Range(0, 52).Select(x => 'A' + 32 * (x / 26) + x % 26), l => true, r => true,
+				(l, r) => $"{(char)l}_{(char)r}")
+				.OrderBy(x => random.Next())
+				.ToList();
+
+			//--Act
+			var sorted = scrambled.OrderBy(StringComparer.InvariantCultureIgnoreCase).ToList();
+
+			//--Assert
+			for (var i = 1; i < scrambled.Count; i++)
+			{
+				Assert.LessOrEqual(StringComparer.InvariantCultureIgnoreCase.Compare(sorted[i - 1], sorted[i]), 0);
+			}
+		}
+
+		[Test]
+		public void TestCustomOrderingDescending()
+		{
+			//--Arrange
+			var random = new Random();
+			var scrambled = Enumerable.Range(0, 52).Select(x => 'A' + 32 * (x / 26) + x % 26).Join(
+				Enumerable.Range(0, 52).Select(x => 'A' + 32 * (x / 26) + x % 26), l => true, r => true,
+				(l, r) => $"{(char)l}_{(char)r}")
+				.OrderBy(x => random.Next())
+				.ToList();
+
+			//--Act
+			var sorted = scrambled.OrderByDescending(StringComparer.InvariantCultureIgnoreCase).ToList();
+
+			//--Assert
+			for (var i = 1; i < scrambled.Count; i++)
+			{
+				Assert.GreaterOrEqual(StringComparer.InvariantCultureIgnoreCase.Compare(sorted[i - 1], sorted[i]), 0);
+			}
+		}
+
+
 		[Test]
 		public void TestDataTableConversionWithByteEnum()
 		{
