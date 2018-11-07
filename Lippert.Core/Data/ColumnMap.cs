@@ -27,17 +27,20 @@ namespace Lippert.Core.Data
 			}
 
 			Behavior |= ColumnBehavior.Key;
-			IgnoreOperations |= SqlOperation.Update;
 
 			if (isGenerated)
 			{
 				return Generated();
 			}
+			else
+			{
+				IgnoreOperations |= SqlOperation.Update;
+			}
 
 			return this;
 		}
 
-		public IColumnMap Generated()
+		public IColumnMap Generated(bool allowUpdates = false)
 		{
 			if (IgnoreOperations.HasFlag(SqlOperation.Select))
 			{
@@ -45,7 +48,7 @@ namespace Lippert.Core.Data
 			}
 			
 			Behavior |= ColumnBehavior.Generated;
-			IgnoreOperations |= SqlOperation.Insert | SqlOperation.Update;
+			IgnoreOperations |= SqlOperation.Insert | (allowUpdates ? 0 : SqlOperation.Update);
 
 			return this;
 		}

@@ -12,7 +12,7 @@ namespace Lippert.Core.Data.Contracts
 
 		IColumnMap Key(bool isGenerated = true);
 
-		IColumnMap Generated();
+		IColumnMap Generated(bool allowUpdates = false);
 
 		IColumnMap Ignore(SqlOperation behavior = SqlOperation.Insert | SqlOperation.Update | SqlOperation.Select);
 	}

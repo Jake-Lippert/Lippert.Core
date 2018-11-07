@@ -113,5 +113,11 @@ namespace Lippert.Core.Tests.Reflection
 			var propIC = PropertyAccessor.Get<ICreateFields>(x => x.CreatedByUserId);
 			Assert.Throws<ArgumentException>(() => PropertyAccessor.Get<User>(propIC));
 		}
+
+		[Test]
+		public void TestThrowsArgumentExceptionForMethods()
+		{
+			Assert.Throws<ArgumentException>(() => PropertyAccessor.Get<string>(x => x.ToString()));
+		}
 	}
 }

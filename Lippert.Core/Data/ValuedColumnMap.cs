@@ -24,7 +24,7 @@ namespace Lippert.Core.Data
 
 		public SqlOperation IgnoreOperations => _column.IgnoreOperations;
 
-		public IColumnMap Generated() => _column.Generated();
+		public IColumnMap Generated(bool allowUpdates = false) => _column.Generated(allowUpdates);
 		public IColumnMap Ignore(SqlOperation behavior = SqlOperation.Insert | SqlOperation.Update | SqlOperation.Select) => _column.Ignore(behavior);
 		public IColumnMap Key(bool isGenerated = true) => _column.Key(isGenerated);
 	}

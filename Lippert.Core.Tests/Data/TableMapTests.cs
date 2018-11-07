@@ -77,7 +77,7 @@ namespace Lippert.Core.Tests.Data
 
 			var modifiedDateUtc = clientMap[(accessUsingInterface ? typeof(IEditFields) : typeof(Client)).GetProperty(nameof(Client.ModifiedDateUtc))];
 			Assert.AreEqual("ModifiedDateUtc", modifiedDateUtc.ColumnName);
-			Assert.AreEqual(ColumnBehavior.Basic, modifiedDateUtc.Behavior);
+			Assert.AreEqual(ColumnBehavior.Generated, modifiedDateUtc.Behavior);
 			Assert.AreEqual(SqlOperation.Insert, modifiedDateUtc.IgnoreOperations);
 		}
 

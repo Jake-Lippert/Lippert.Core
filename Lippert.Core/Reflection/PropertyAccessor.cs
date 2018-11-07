@@ -12,7 +12,11 @@ namespace Lippert.Core.Reflection
 		/// <summary>
 		/// Get the property info for a property specified by an expression
 		/// </summary>
-		public static PropertyInfo Get<T>(Expression<Func<T, object>> selector)
+		public static PropertyInfo Get<T>(Expression<Func<T, object>> selector) => Get<T, object>(selector);
+		/// <summary>
+		/// Get the property info for a property specified by an expression
+		/// </summary>
+		public static PropertyInfo Get<T, TProperty>(Expression<Func<T, TProperty>> selector)
 		{
 			if (selector is LambdaExpression lambda)
 			{

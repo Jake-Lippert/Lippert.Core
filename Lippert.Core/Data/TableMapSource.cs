@@ -11,8 +11,7 @@ namespace Lippert.Core.Data
 		public static ITableMap<T> GetTableMap<T>() => (ITableMap<T>)GetTableMap(typeof(T));
 
 		public static ITableMap GetTableMap(Type type) => GetTableMaps()
-			.Where(x => x.ModelType == type)
-			.Single();
+			.Single(x => x.ModelType == type);
 
 		public static List<ITableMap> GetTableMaps() =>
 			ReflectingRegistrationSource.GetCodebaseTypesAssignableTo<ITableMap>()
@@ -22,6 +21,10 @@ namespace Lippert.Core.Data
 
 		public static List<ITableMapBuilder> GetTableMapBuilders<T>() => GetTableMapBuilders()
 			.Where(mb => mb.HandlesType<T>())
+			.ToList();
+
+		public static List<ITableMapBuilder> GetTableMapBuilders(Type type) => GetTableMapBuilders()
+			.Where(mb => mb.ModelType.IsAssignableFrom(type))
 			.ToList();
 
 		public static List<ITableMapBuilder> GetTableMapBuilders() =>

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Lippert.Core.Data.Contracts;
+using Lippert.Core.Reflection;
 
 namespace Lippert.Core.Data.QueryBuilders
 {
@@ -45,14 +46,14 @@ namespace Lippert.Core.Data.QueryBuilders
 			return this;
 		}
 
-		public PredicateBuilder<T> Filter(Expression<Func<T, object>> column)
+		public PredicateBuilder<T> Filter<TColumn>(Expression<Func<T, TColumn>> column)
 		{
-			_filterColumns.Add(TableMap[column ?? throw new ArgumentNullException(nameof(column))]);
+			_filterColumns.Add(TableMap[PropertyAccessor.Get(column ?? throw new ArgumentNullException(nameof(column)))]);
 			return this;
 		}
-		public PredicateBuilder<T> Filter(Expression<Func<T, object>> column, object value)
+		public PredicateBuilder<T> Filter<TColumn>(Expression<Func<T, TColumn>> column, TColumn value)
 		{
-			_filterColumns.Add(new ValuedColumnMap(TableMap[column ?? throw new ArgumentNullException(nameof(column))], value));
+			_filterColumns.Add(new ValuedColumnMap(TableMap[PropertyAccessor.Get(column ?? throw new ArgumentNullException(nameof(column)))], value));
 			return this;
 		}
 
