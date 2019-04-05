@@ -1,4 +1,5 @@
-﻿using System.Configuration;
+﻿#if TARGET_FRAMEWORK_NET471
+using System.Configuration;
 
 namespace Lippert.Core.Configuration
 {
@@ -15,9 +16,13 @@ namespace Lippert.Core.Configuration
 		{
 			get
 			{
-				var section = (TSection)ConfigurationManager.GetSection(SectionName);
-				ProcessMissingElements(section, SectionName);
-				return section;
+				if (ConfigurationManager.GetSection(SectionName) is TSection section)
+				{
+					ProcessMissingElements(section, SectionName);
+					return section;
+				}
+
+				throw new System.InvalidOperationException($"No config section could be found for the name '{SectionName}'.");
 			}
 		}
 
@@ -45,3 +50,4 @@ namespace Lippert.Core.Configuration
 		}
 	}
 }
+#endif

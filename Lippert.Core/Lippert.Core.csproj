@@ -1,21 +1,27 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;net471</TargetFrameworks>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<Version>0.1.0</Version>
+		<Authors>Jake Lippert</Authors>
+		<Copyright>Jake Lippert 2019</Copyright>
+		<PackageProjectUrl></PackageProjectUrl>
+		<RepositoryUrl>https://github.com/Jake-Lippert/Lippert.Core</RepositoryUrl>
+		<RepositoryType>GitHub</RepositoryType>
+		<PackageTags>Dependencies SQLGeneration Utilities Extensions Reflection</PackageTags>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Version>0.1.0</Version>
-    <Authors>Jake Lippert</Authors>
-    <Copyright>Jake Lippert 2019</Copyright>
-    <PackageProjectUrl></PackageProjectUrl>
-    <RepositoryUrl>https://github.com/Jake-Lippert/Lippert.Core</RepositoryUrl>
-    <RepositoryType>GitHub</RepositoryType>
-    <PackageTags>Dependencies SQLGeneration Utilities Extensions Reflection</PackageTags>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(TargetFramework)'=='net471'">
+		<DefineConstants>TARGET_FRAMEWORK_NET471</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup Condition="'$(TargetFramework)'=='net471'">
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System.Configuration" />
+		<PackageReference Include="System.ValueTuple" Version="4.4.0" />
+	</ItemGroup>
 </Project>

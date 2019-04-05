@@ -1,6 +1,7 @@
-﻿using System.Configuration;
+﻿#if TARGET_FRAMEWORK_NET471
+using System.Configuration;
 
-namespace NSS.Core.Configuration.Extensions
+namespace Lippert.Core.Configuration.Extensions
 {
 	/// <summary>
 	/// https://offbyoneerrors.wordpress.com/2015/10/16/writing-a-configuration-property-aspect-with-postsharp/
@@ -11,3 +12,4 @@ namespace NSS.Core.Configuration.Extensions
 			where T : ConfigurationElement => element.ElementInformation.IsPresent ? element : null;
 	}
 }
+#endif

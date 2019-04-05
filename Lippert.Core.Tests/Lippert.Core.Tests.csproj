@@ -1,24 +1,30 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>netcoreapp2.0;net471</TargetFrameworks>
+		<IsPackable>false</IsPackable>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
 
-  <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
 
-    <IsPackable>false</IsPackable>
+	<ItemGroup>
+		<PackageReference Include="Moq" Version="4.8.2" />
+		<PackageReference Include="NUnit" Version="3.10.1" />
+	</ItemGroup>
 
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Lippert.Core\Lippert.Core.csproj" />
+	</ItemGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Moq" Version="4.8.2" />
-    <PackageReference Include="NUnit" Version="3.10.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Lippert.Core\Lippert.Core.csproj" />
-  </ItemGroup>
-
+	<PropertyGroup Condition="'$(TargetFramework)'=='net471'">
+		<DefineConstants>TARGET_FRAMEWORK_NET471</DefineConstants>
+	</PropertyGroup>
+	
+	<ItemGroup Condition="'$(TargetFramework)'=='net471'">
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System.Configuration" />
+		<PackageReference Include="System.ValueTuple" Version="4.4.0" />
+	</ItemGroup>
 </Project>
