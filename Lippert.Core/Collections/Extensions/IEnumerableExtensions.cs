@@ -19,6 +19,11 @@ namespace Lippert.Core.Collections.Extensions
 			source.Select(grouping => (grouping.Key, grouping.ToList()));
 
 		/// <summary>
+		/// Returns an empty enumerable if the source is null
+		/// </summary>
+		public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T> source) => source ?? Enumerable.Empty<T>();
+
+		/// <summary>
 		/// Projects each element of a sequence into a named tuple including the element's index
 		/// </summary>
 		public static IEnumerable<(T item, int index)> Indexed<T>(this IEnumerable<T> source) => source.Select((x, i) => (x, i));
@@ -42,17 +47,7 @@ namespace Lippert.Core.Collections.Extensions
 				on leftKeySelector(l) equals rightKeySelector(r) into joined
 			from j in joined.DefaultIfEmpty()
 			select resultSelector(l, j);
-
-		/// <summary>
-		/// Sorts the elements of a sequence in ascending order by using a specified comparer
-		/// </summary>
-		public static IEnumerable<T> OrderBy<T>(this IEnumerable<T> source, IComparer<T> comparer) => source.OrderBy(x => x, comparer);
-
-		/// <summary>
-		/// Sorts the elements of a sequence in descending order by using a specified comparer
-		/// </summary>
-		public static IEnumerable<T> OrderByDescending<T>(this IEnumerable<T> source, IComparer<T> comparer) => source.OrderByDescending(x => x, comparer);
-
+		
 		public static IEnumerable<TResult> RightJoin<TLeft, TRight, TKey, TResult>(this IEnumerable<TLeft> left, IEnumerable<TRight> right,
 			Func<TLeft, TKey> leftKeySelector, Func<TRight, TKey> rightKeySelector,
 			Func<TLeft, TRight, TResult> resultSelector) =>
@@ -93,6 +88,57 @@ namespace Lippert.Core.Collections.Extensions
 			}
 
 			return dataTable;
+		}
+
+		/// <summary>
+		/// Builds a binary tree whose root node is the first value in source
+		/// </summary>
+		public static BinaryTree<T> ToBinaryTree<T>(this IEnumerable<T> source)
+			where T : IComparable<T>
+		{
+			BinaryTree<T> tree = null;
+			foreach (var item in source)
+			{
+				if (tree == null)
+				{
+					tree = new BinaryTree<T>(item);
+				}
+				else
+				{
+					tree.Add(item);
+				}
+			}
+
+			return tree ?? throw new InvalidOperationException("The sequence must contain at least one element.");
+		}
+
+		/// <summary>
+		/// Builds an N-Tree given the parent-child relations specified
+		/// </summary>
+		/// <seealso cref="https://stackoverflow.com/a/18018037/595473"/>
+		public static NTree<T, TId> ToNTree<T, TId>(this IEnumerable<T> source, Func<T, TId> idSelector, Func<T, TId> parentIdSelector)
+		{
+			//--Initialize the map
+			var nodeMap = source.ToDictionary(idSelector, x => (ParentId: parentIdSelector(x), Tree: new NTree<T, TId>(x)));
+
+			var roots = new List<NTree<T, TId>>();
+			foreach (var (parentId, tree) in nodeMap.Values)
+			{
+				if (Equals(parentId, default(TId)))
+				{
+					roots.Add(tree);
+				}
+				//--If you have dangling branches check that nodeMap[parentId] exists
+				else if (nodeMap.TryGetValue(parentId, out var parentNode))
+				{
+					parentNode.Tree.Add(tree);
+				}
+			}
+
+			return roots.Count == 1 ? roots.Single() : new NTree<T, TId>(default)
+			{
+				Children = roots
+			};
 		}
 	}
 }

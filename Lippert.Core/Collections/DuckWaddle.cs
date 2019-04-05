@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Lippert.Core.Collections.Extensions;
 
 namespace Lippert.Core.Collections
 {
@@ -73,7 +72,7 @@ namespace Lippert.Core.Collections
 		public static void Compare<T, TCompare>(IEnumerable<T> left, IEnumerable<T> right, Func<T, TCompare> selector,
 			Action<T> leftOnly, Action<T, T> both, Action<T> rightOnly)
 			where TCompare : IComparable<TCompare> =>
-			Compare(left, right, Comparer<T>.Create(selector), leftOnly, both, rightOnly);
+			Compare(left, right, CreateComparer(selector), leftOnly, both, rightOnly);
 
 		/// <summary>
 		/// Compares two sorted collections and operates on a venn diagram-like comparison
@@ -87,7 +86,7 @@ namespace Lippert.Core.Collections
 		public static void Compare<T>(IEnumerable<T> left, IEnumerable<T> right,
 			Action<T> leftOnly, Action<T, T> both, Action<T> rightOnly)
 			where T : IComparable<T> =>
-			Compare(left, right, System.Collections.Generic.Comparer<T>.Default, leftOnly, both, rightOnly);
+			Compare(left, right, Comparer<T>.Default, leftOnly, both, rightOnly);
 
 		/// <summary>
 		/// Compares two sorted collections and provides a venn diagram-like result
@@ -97,18 +96,18 @@ namespace Lippert.Core.Collections
 		/// <param name="right"></param>
 		/// <param name="comparer"></param>
 		/// <returns></returns>
-		public static Result<T> Compare<T>(IEnumerable<T> left, IEnumerable<T> right, IComparer<T> comparer)
+		public static (List<T> Left, List<(T Left, T Right)> Both, List<T> Right) Compare<T>(IEnumerable<T> left, IEnumerable<T> right, IComparer<T> comparer)
 		{
-			var result = new Result<T>
+			var result = new
 			{
 				Left = new List<T>(),
-				Both = new List<T>(),
+				Both = new List<(T, T)>(),
 				Right = new List<T>()
 			};
 
-			Compare(left, right, comparer, l => result.Left.Add(l), (l, r) => result.Both.Add(l), r => result.Right.Add(r));
+			Compare(left, right, comparer, l => result.Left.Add(l), (l, r) => result.Both.Add((l, r)), r => result.Right.Add(r));
 
-			return result;
+			return (result.Left, result.Both, result.Right);
 		}
 
 		/// <summary>
@@ -120,9 +119,9 @@ namespace Lippert.Core.Collections
 		/// <param name="right"></param>
 		/// <param name="selector"></param>
 		/// <returns></returns>
-		public static Result<T> Compare<T, TCompare>(IEnumerable<T> left, IEnumerable<T> right, Func<T, TCompare> selector)
+		public static (List<T> Left, List<(T Left, T Right)> Both, List<T> Right) Compare<T, TCompare>(IEnumerable<T> left, IEnumerable<T> right, Func<T, TCompare> selector)
 			where TCompare : IComparable<TCompare> =>
-			Compare(left, right, Comparer<T>.Create(selector));
+			Compare(left, right, CreateComparer(selector));
 
 		/// <summary>
 		/// Compares two sorted collections and provides a venn diagram-like result
@@ -131,9 +130,9 @@ namespace Lippert.Core.Collections
 		/// <param name="left"></param>
 		/// <param name="right"></param>
 		/// <returns></returns>
-		public static Result<T> Compare<T>(IEnumerable<T> left, IEnumerable<T> right)
+		public static (List<T> Left, List<(T Left, T Right)> Both, List<T> Right) Compare<T>(IEnumerable<T> left, IEnumerable<T> right)
 			where T : IComparable<T> =>
-			Compare(left, right, System.Collections.Generic.Comparer<T>.Default);
+			Compare(left, right, Comparer<T>.Default);
 
 		/// <summary>
 		/// Sorts and compares two collections and provides a venn diagram-like result
@@ -143,8 +142,8 @@ namespace Lippert.Core.Collections
 		/// <param name="right"></param>
 		/// <param name="comparer"></param>
 		/// <returns></returns>
-		public static Result<T> SortAndCompare<T>(IEnumerable<T> left, IEnumerable<T> right, IComparer<T> comparer) =>
-			Compare(left.OrderBy(comparer), right.OrderBy(comparer), comparer);
+		public static (List<T> Left, List<(T Left, T Right)> Both, List<T> Right) SortAndCompare<T>(IEnumerable<T> left, IEnumerable<T> right, IComparer<T> comparer) =>
+			Compare(left.OrderBy(l => l, comparer), right.OrderBy(r => r, comparer), comparer);
 
 		/// <summary>
 		/// Sorts and compares two collections and provides a venn diagram-like result
@@ -155,9 +154,9 @@ namespace Lippert.Core.Collections
 		/// <param name="right"></param>
 		/// <param name="selector"></param>
 		/// <returns></returns>
-		public static Result<T> SortAndCompare<T, TCompare>(IEnumerable<T> left, IEnumerable<T> right, Func<T, TCompare> selector)
+		public static (List<T> Left, List<(T Left, T Right)> Both, List<T> Right) SortAndCompare<T, TCompare>(IEnumerable<T> left, IEnumerable<T> right, Func<T, TCompare> selector)
 			where TCompare : IComparable<TCompare> =>
-			SortAndCompare(left, right, Comparer<T>.Create(selector));
+			SortAndCompare(left, right, CreateComparer(selector));
 
 		/// <summary>
 		/// Sorts and compares two collections and provides a venn diagram-like result
@@ -166,9 +165,9 @@ namespace Lippert.Core.Collections
 		/// <param name="left"></param>
 		/// <param name="right"></param>
 		/// <returns></returns>
-		public static Result<T> SortAndCompare<T>(IEnumerable<T> left, IEnumerable<T> right)
+		public static (List<T> Left, List<(T Left, T Right)> Both, List<T> Right) SortAndCompare<T>(IEnumerable<T> left, IEnumerable<T> right)
 			where T : IComparable<T> =>
-			SortAndCompare(left, right, System.Collections.Generic.Comparer<T>.Default);
+			SortAndCompare(left, right, Comparer<T>.Default);
 
 		/// <summary>
 		/// Sorts and compares two sorted collections and operates on a venn diagram-like comparison
@@ -182,7 +181,7 @@ namespace Lippert.Core.Collections
 		/// <param name="rightOnly"></param>
 		public static void SortAndCompare<T>(IEnumerable<T> left, IEnumerable<T> right, IComparer<T> comparer,
 			Action<T> leftOnly, Action<T, T> both, Action<T> rightOnly) =>
-			Compare(left.OrderBy(comparer), right.OrderBy(comparer), comparer, leftOnly, both, rightOnly);
+			Compare(left.OrderBy(l => l, comparer), right.OrderBy(r => r, comparer), comparer, leftOnly, both, rightOnly);
 
 		/// <summary>
 		/// Sorts and compares two sorted collections and operates on a venn diagram-like comparison
@@ -198,7 +197,7 @@ namespace Lippert.Core.Collections
 		public static void SortAndCompare<T, TCompare>(IEnumerable<T> left, IEnumerable<T> right, Func<T, TCompare> selector,
 			Action<T> leftOnly, Action<T, T> both, Action<T> rightOnly)
 			where TCompare : IComparable<TCompare> =>
-			SortAndCompare(left, right, Comparer<T>.Create(selector), leftOnly, both, rightOnly);
+			SortAndCompare(left, right, CreateComparer(selector), leftOnly, both, rightOnly);
 
 		/// <summary>
 		/// Sorts and compares two sorted collections and operates on a venn diagram-like comparison
@@ -212,13 +211,11 @@ namespace Lippert.Core.Collections
 		public static void SortAndCompare<T>(IEnumerable<T> left, IEnumerable<T> right,
 			Action<T> leftOnly, Action<T, T> both, Action<T> rightOnly)
 			where T : IComparable<T> =>
-			SortAndCompare(left, right, System.Collections.Generic.Comparer<T>.Default, leftOnly, both, rightOnly);
+			SortAndCompare(left, right, Comparer<T>.Default, leftOnly, both, rightOnly);
 
-		public struct Result<T>
-		{
-			public List<T> Left { get; set; }
-			public List<T> Both { get; set; }
-			public List<T> Right { get; set; }
-		}
+
+		private static IComparer<T> CreateComparer<T, TCompare>(Func<T, TCompare> selector)
+			where TCompare : IComparable<TCompare> =>
+			Comparer<T>.Create((T x, T y) => selector(x).CompareTo(selector(y)));
 	}
 }

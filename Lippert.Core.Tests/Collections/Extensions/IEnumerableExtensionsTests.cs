@@ -52,49 +52,6 @@ namespace Lippert.Core.Tests.Collections.Extensions
 
 
 		[Test]
-		public void TestCustomOrdering()
-		{
-			//--Arrange
-			var random = new Random();
-			var scrambled = Enumerable.Range(0, 52).Select(x => 'A' + 32 * (x / 26) + x % 26).Join(
-				Enumerable.Range(0, 52).Select(x => 'A' + 32 * (x / 26) + x % 26), l => true, r => true,
-				(l, r) => $"{(char)l}_{(char)r}")
-				.OrderBy(x => random.Next())
-				.ToList();
-
-			//--Act
-			var sorted = scrambled.OrderBy(StringComparer.InvariantCultureIgnoreCase).ToList();
-
-			//--Assert
-			for (var i = 1; i < scrambled.Count; i++)
-			{
-				Assert.LessOrEqual(StringComparer.InvariantCultureIgnoreCase.Compare(sorted[i - 1], sorted[i]), 0);
-			}
-		}
-
-		[Test]
-		public void TestCustomOrderingDescending()
-		{
-			//--Arrange
-			var random = new Random();
-			var scrambled = Enumerable.Range(0, 52).Select(x => 'A' + 32 * (x / 26) + x % 26).Join(
-				Enumerable.Range(0, 52).Select(x => 'A' + 32 * (x / 26) + x % 26), l => true, r => true,
-				(l, r) => $"{(char)l}_{(char)r}")
-				.OrderBy(x => random.Next())
-				.ToList();
-
-			//--Act
-			var sorted = scrambled.OrderByDescending(StringComparer.InvariantCultureIgnoreCase).ToList();
-
-			//--Assert
-			for (var i = 1; i < scrambled.Count; i++)
-			{
-				Assert.GreaterOrEqual(StringComparer.InvariantCultureIgnoreCase.Compare(sorted[i - 1], sorted[i]), 0);
-			}
-		}
-
-
-		[Test]
 		public void TestDataTableConversionWithByteEnum()
 		{
 			//--Arrange
@@ -291,6 +248,75 @@ namespace Lippert.Core.Tests.Collections.Extensions
 			Zero = 0,
 			One = 1,
 			Two = 2
+		}
+		
+
+		[Test]
+		[TestCase(86)]
+		[TestCase(101)]
+		[TestCase(980)]
+		public void TestBuildsBinaryTreeAndEnumeratesInOrder(int size)
+		{
+			//--Arrange
+			var rand = new Random();
+
+			//--Act
+			var tree = Enumerable.Range(0, size).OrderBy(x => rand.Next()).ToBinaryTree();
+			var enumerated = tree.ToList();
+
+			//--Assert
+			foreach (var (x, i) in enumerated.Select((x, i) => (x, i)))
+			{
+				Assert.AreEqual(i, x);
+			}
+		}
+
+		[Test]
+		public void TestBuildsNTreeAndEnumerates()
+		{
+			//--Arrange
+			var expectedDirectories = new[]
+			{
+				"Dir A",
+				"Dir A/Dir A1",
+				"Dir A/Dir A1/File 1",
+				"Dir A/Dir A1/File 2",
+				"Dir A/Dir A1/File 3",
+				"Dir A/Dir A2",
+				"Dir A/Dir A2/File 0",
+				"Dir B",
+				"Dir B/Dir B1",
+				"Dir B/Dir B1/File 1",
+				"Dir B/Dir B1/File 2",
+				"Dir C",
+				"Dir C/Dir C1",
+				"Dir C/Dir C1/File 4",
+				"Dir C/Dir C2",
+				"Dir C/Dir C2/File 5"
+			};
+
+			//--Act
+			var tree = expectedDirectories.ToNTree(x => x, x => x.LastIndexOf('/') < 0 ? null : x.Substring(0, x.LastIndexOf('/')));
+
+			//--Assert
+			Assert.AreEqual(expectedDirectories.Length + 1, tree.Count());
+			Assert.AreEqual(null, tree.Value);
+			Assert.AreEqual("Dir A", tree.Children[0].Value);
+			Assert.AreEqual("Dir A/Dir A1", tree.Children[0].Children[0].Value);
+			Assert.AreEqual("Dir A/Dir A1/File 1", tree.Children[0].Children[0].Children[0].Value);
+			Assert.AreEqual("Dir A/Dir A1/File 2", tree.Children[0].Children[0].Children[1].Value);
+			Assert.AreEqual("Dir A/Dir A1/File 3", tree.Children[0].Children[0].Children[2].Value);
+			Assert.AreEqual("Dir A/Dir A2", tree.Children[0].Children[1].Value);
+			Assert.AreEqual("Dir A/Dir A2/File 0", tree.Children[0].Children[1].Children[0].Value);
+			Assert.AreEqual("Dir B", tree.Children[1].Value);
+			Assert.AreEqual("Dir B/Dir B1", tree.Children[1].Children[0].Value);
+			Assert.AreEqual("Dir B/Dir B1/File 1", tree.Children[1].Children[0].Children[0].Value);
+			Assert.AreEqual("Dir B/Dir B1/File 2", tree.Children[1].Children[0].Children[1].Value);
+			Assert.AreEqual("Dir C", tree.Children[2].Value);
+			Assert.AreEqual("Dir C/Dir C1", tree.Children[2].Children[0].Value);
+			Assert.AreEqual("Dir C/Dir C1/File 4", tree.Children[2].Children[0].Children[0].Value);
+			Assert.AreEqual("Dir C/Dir C2", tree.Children[2].Children[1].Value);
+			Assert.AreEqual("Dir C/Dir C2/File 5", tree.Children[2].Children[1].Children[0].Value);
 		}
 	}
 }
