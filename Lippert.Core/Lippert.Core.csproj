@@ -6,11 +6,12 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Version>0.1.0</Version>
     <Authors>Jake Lippert</Authors>
-    <Copyright>Jake Lippert 2018</Copyright>
+    <Copyright>Jake Lippert 2019</Copyright>
     <PackageProjectUrl></PackageProjectUrl>
     <RepositoryUrl>https://github.com/Jake-Lippert/Lippert.Core</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>Dependencies SQLGeneration Utilities Extensions Reflection</PackageTags>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
