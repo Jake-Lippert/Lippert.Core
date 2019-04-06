@@ -1,21 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;net471</TargetFrameworks>
+		<LangVersion>latest</LangVersion>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageId>Lippert.Core</PackageId>
 		<Version>0.1.0</Version>
 		<Authors>Jake Lippert</Authors>
 		<Copyright>Jake Lippert 2019</Copyright>
-		<PackageProjectUrl></PackageProjectUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/Jake-Lippert/Lippert.Core</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/Jake-Lippert/Lippert.Core</RepositoryUrl>
 		<RepositoryType>GitHub</RepositoryType>
 		<PackageTags>Dependencies SQLGeneration Utilities Extensions Reflection</PackageTags>
-		<LangVersion>latest</LangVersion>
+		<Description>Various utilities and helpers spanning the range of collections, configuration, sql generation, extensions, reflection, and more.</Description>
+		<PackageReleaseNotes>0.1.0
+- Initial publish of functionality; waiting on C#8 before bumping version up to 1.0.0 due to a likely removal of TypeSwitch</PackageReleaseNotes>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<LangVersion>latest</LangVersion>
-	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net471'">
 		<DefineConstants>TARGET_FRAMEWORK_NET471</DefineConstants>
 	</PropertyGroup>
