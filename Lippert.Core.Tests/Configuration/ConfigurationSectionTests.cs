@@ -1,4 +1,4 @@
-﻿#if TARGET_FRAMEWORK_NET471
+﻿#if !TARGET_NET_CORE_APP_2_0
 using System.Configuration;
 using Lippert.Core.Configuration;
 using Lippert.Core.Configuration.Extensions;

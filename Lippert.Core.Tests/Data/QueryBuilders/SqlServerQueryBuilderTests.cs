@@ -13,10 +13,10 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 		public void OneTimeSetUp() => ReflectingRegistrationSource.CodebaseNamespacePrefix = "Lippert";
 
 		private string[] SplitQuery(string query) =>
-#if TARGET_FRAMEWORK_NET471
-			query.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-#else
+#if TARGET_NET_CORE_APP_2_0
 			query.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+#else
+			query.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 #endif
 
 		[Test]

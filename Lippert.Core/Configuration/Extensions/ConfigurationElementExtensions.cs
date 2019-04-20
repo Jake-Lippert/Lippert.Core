@@ -1,4 +1,4 @@
-﻿#if TARGET_FRAMEWORK_NET471
+﻿#if !TARGET_NET_STANDARD_2_0
 using System.Configuration;
 
 namespace Lippert.Core.Configuration.Extensions
