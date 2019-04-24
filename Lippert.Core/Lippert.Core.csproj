@@ -5,7 +5,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageId>Lippert.Core</PackageId>
-		<Version>0.1.0</Version>
+		<Version>0.2.0</Version>
 		<Authors>Jake Lippert</Authors>
 		<Copyright>Jake Lippert 2019</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -15,7 +15,9 @@
 		<PackageTags>Dependencies SQLGeneration Utilities Extensions Reflection</PackageTags>
 		<Description>Various utilities and helpers spanning the range of collections, configuration, sql generation, extensions, reflection, and more.</Description>
 		<PackageReleaseNotes>0.1.0
-- Initial publish of functionality; waiting on C#8 before bumping version up to 1.0.0 due to a likely removal of TypeSwitch</PackageReleaseNotes>
+- Initial publish of functionality; waiting on C#8 before bumping version up to 1.0.0 due to a likely removal of TypeSwitch
+0.2.0
+- Splitting builders out into valued and non-valued variants and reducing .Net target framework requirement to 4.5</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">

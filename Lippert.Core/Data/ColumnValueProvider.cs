@@ -37,13 +37,13 @@ namespace Lippert.Core.Data
 			}
 		}
 
-		public static void ApplyUpdateBuilderValues<TRecord>(QueryBuilders.UpdateBuilder<TRecord> updateBuilder)
+		public static void ApplyUpdateBuilderValues<TRecord>(QueryBuilders.Contracts.IValuedUpdateBuilder<TRecord> updateBuilder)
 		{
 			foreach (var provider in _tableMapBuilders[typeof(TRecord)])
 			{
 				foreach (var (propertyInfo, value) in provider.GetUpdateValues())
 				{
-					updateBuilder.Set(propertyInfo, value, true);
+					updateBuilder.Set(propertyInfo, value);
 				}
 			}
 		}
