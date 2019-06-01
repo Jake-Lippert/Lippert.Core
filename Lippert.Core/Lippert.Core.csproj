@@ -17,7 +17,8 @@
 		<PackageReleaseNotes>0.1.0
 - Initial publish of functionality; waiting on C#8 before bumping version up to 1.0.0 due to a likely removal of TypeSwitch
 0.2.0
-- Splitting builders out into valued and non-valued variants and reducing .Net target framework requirement to 4.5</PackageReleaseNotes>
+- Splitting builders out into valued and non-valued variants
+- Reducing .Net target framework requirement to 4.5</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
