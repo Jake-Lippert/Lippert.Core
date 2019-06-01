@@ -112,6 +112,11 @@ namespace Lippert.Core.Collections.Extensions
 			return tree ?? throw new InvalidOperationException("The sequence must contain at least one element.");
 		}
 
+		public static MutableLookup<TKey, T> ToMutableLookup<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector) =>
+			source.ToMutableLookup(keySelector, x => x);
+		public static MutableLookup<TKey, TElement> ToMutableLookup<T, TKey, TElement>(this IEnumerable<T> source, Func<T, TKey> keySelector, Func<T, TElement> elementSelector) =>
+			new MutableLookup<TKey, TElement>(source.GroupBy(keySelector, elementSelector));
+
 		/// <summary>
 		/// Builds an N-Tree given the parent-child relations specified
 		/// </summary>
