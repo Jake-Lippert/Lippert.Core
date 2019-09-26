@@ -53,11 +53,6 @@ namespace Lippert.Core.Data.Contracts
 		List<IColumnMap> KeyColumns { get; }
 
 		/// <summary>
-		/// Maps a column for the property with respect to the table map's class
-		/// </summary>
-		IColumnMap Map(IColumnMap columnMap);
-
-		/// <summary>
 		/// Gets the column map for the property that applies to the table map's class, a subclass, or an interface
 		/// </summary>
 		IColumnMap this[PropertyInfo property] { get; }

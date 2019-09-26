@@ -8,6 +8,7 @@ namespace Lippert.Core.Tests
 
 		public class Claims
 		{
+			public Guid ClientId { get; set; }
 			public Guid UserId { get; set; }
 		}
 	}

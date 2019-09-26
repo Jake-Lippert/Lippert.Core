@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Lippert.Core.Collections.Extensions;
 using Lippert.Core.Data.Contracts;
 using Lippert.Core.Reflection;
+using Lippert.Core.Reflection.Extensions;
 
 namespace Lippert.Core.Data
 {
@@ -15,6 +16,7 @@ namespace Lippert.Core.Data
 	{
 		private static readonly Regex _validName = new Regex(@"^[A-Za-z][A-Za-z_0-9]*$");
 		private readonly Dictionary<PropertyInfo, int> _propertyOrder;
+		private readonly Dictionary<PropertyInfo, IColumnMap> _columnMaps = new Dictionary<PropertyInfo, IColumnMap>();
 		private readonly Type _includePropertiesAssignableTo;
 
 		/// <summary>
@@ -39,7 +41,7 @@ namespace Lippert.Core.Data
 			_propertyOrder = ModelType.GetProperties(BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.Public | BindingFlags.NonPublic)
 				.Indexed()
 				.ToDictionary(x => x.item, x => x.index);
-			TypeColumns = new ReadOnlyDictionary<Type, Dictionary<PropertyInfo, IColumnMap>>(GetTypes(ModelType).Distinct()
+			TypeColumns = new ReadOnlyDictionary<Type, Dictionary<PropertyInfo, IColumnMap>>(ModelType.GetBaseTypes(includeSeed: true, includeInterfaces: true).Distinct()
 				.ToDictionary(t => t, t => new Dictionary<PropertyInfo, IColumnMap>()));
 
 			foreach (var mapBuilder in TableMapSource.GetTableMapBuilders<T>())
@@ -49,19 +51,6 @@ namespace Lippert.Core.Data
 					.GetMethod(nameof(TableMapBuilder<object>.Map))
 					.MakeGenericMethod(ModelType)
 					.Invoke(mapBuilder, new[] { this });
-			}
-
-			List<Type> GetTypes(Type type)
-			{
-				var types = new List<Type>();
-				if (type != typeof(object))
-				{
-					types.Add(type);
-					types.AddRange(GetTypes(type.BaseType));
-					types.AddRange(type.GetInterfaces());
-				}
-
-				return types;
 			}
 		}
 
@@ -89,7 +78,7 @@ namespace Lippert.Core.Data
 		}
 
 		/// <summary>
-		/// Gets a dictionaries of column mappings with respect to their declaring type
+		/// Gets dictionaries of column mappings with respect to their declaring type
 		/// </summary>
 		public ReadOnlyDictionary<Type, Dictionary<PropertyInfo, IColumnMap>> TypeColumns { get; }
 
@@ -135,51 +124,40 @@ namespace Lippert.Core.Data
 		/// <summary>
 		/// Maps a column for the property with respect to the table map's class
 		/// </summary>
-		public IColumnMap Map(Expression<Func<T, object>> column) =>
-			Map(new ColumnMap<T>(column ?? throw new ArgumentNullException(nameof(column))));
+		public IColumnMap Map(Expression<Func<T, object>> column) => Map(new ColumnMap<T>(column ?? throw new ArgumentNullException(nameof(column))));
 
 		/// <summary>
 		/// Maps a column for the property with respect to the table map's class
 		/// </summary>
-		public IColumnMap Map(IColumnMap columnMap)
+		private IColumnMap Map(IColumnMap columnMap)
 		{
-			//--Iterate through each class, subclass, and interface
-			foreach (var (type, columns) in TypeColumns.AsTuples())
+			//--Check for an existing map for the specified column.
+			var (declaringType, declaringProperty) = columnMap.Property.GetDeclaringType(getInterface: true);
+			if (!_columnMaps.TryGetValue(declaringProperty, out columnMap))
 			{
-				if (columnMap.Property.DeclaringType.IsAssignableFrom(type))
+				//--Always build for the most-common class/interface
+				_columnMaps[declaringProperty] = columnMap = new ColumnMap<T>(declaringProperty);
+			}
+
+			//--Iterate through each class, subclass, and interface
+			foreach (var (type, columns) in TypeColumns.Where(tc => declaringType.IsAssignableFrom(tc.Key)).AsTuples())
+			{
+				PropertyInfo targetProperty;
+				if (type.IsInterface == declaringType.IsInterface)
 				{
-					if (type.IsInterface ^ columnMap.Property.DeclaringType.IsInterface)
-					{
-						//--Map a class's or interface's property to the loop's current interface or class
-						if (PropertyAccessor.Get(columnMap.Property, type) is PropertyInfo targetProperty)
-						{
-							AddProperty(targetProperty);
-						}
-					}
-					else
-					{
-						AddProperty(columnMap.Property);
-					}
+					targetProperty = declaringProperty;
+				}
+				//--Map a class's or interface's property to the loop's current interface or class
+				else if (!declaringProperty.TryGet(type, out targetProperty))
+				{
+					continue;
 				}
 
-				void AddProperty(PropertyInfo property)
+				if (_includePropertiesAssignableTo.IsAssignableFrom(targetProperty.DeclaringType) ||
+					declaringProperty.TryGet(ModelType, out var typeProperty) &&
+						_includePropertiesAssignableTo.IsAssignableFrom(typeProperty.DeclaringType))
 				{
-					if (_includePropertiesAssignableTo.IsAssignableFrom(property.DeclaringType))
-					{
-						TypeColumns[type].Add(property, columnMap);
-					}
-					else
-					{
-						try
-						{
-							if (PropertyAccessor.Get(columnMap.Property, ModelType) is PropertyInfo typeProperty &&
-								_includePropertiesAssignableTo.IsAssignableFrom(typeProperty.DeclaringType))
-							{
-								TypeColumns[type].Add(property, columnMap);
-							}
-						}
-						catch { }
-					}
+					columns[targetProperty] = columnMap;
 				}
 			}
 

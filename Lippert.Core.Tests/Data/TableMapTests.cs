@@ -157,5 +157,42 @@ namespace Lippert.Core.Tests.Data
 			Assert.AreEqual(ColumnBehavior.Basic, companyId.Behavior);
 			Assert.AreEqual(SqlOperation.None, companyId.IgnoreOperations);
 		}
+
+		[Test]
+		public void TestCreateMapForClassWithFieldDefinedByMapAndBuilder()
+		{
+			//--Act
+			var clientUserMap = new ClientUserMap();
+			DisplayTableMapColumns(clientUserMap);
+
+			//--Assert
+			Assert.AreEqual("Client_User", clientUserMap.TableName);
+
+			var clientId = clientUserMap[x => x.ClientId];
+			Assert.AreEqual(nameof(ClientUser.ClientId), clientId.ColumnName);
+			Assert.AreEqual(ColumnBehavior.Key, clientId.Behavior);
+			Assert.AreEqual(SqlOperation.Update, clientId.IgnoreOperations);
+
+			var userId = clientUserMap[x => x.UserId];
+			Assert.AreEqual(nameof(ClientUser.UserId), userId.ColumnName);
+			Assert.AreEqual(ColumnBehavior.Key, userId.Behavior);
+			Assert.AreEqual(SqlOperation.Update, userId.IgnoreOperations);
+
+			var isActive = clientUserMap[x => x.IsActive];
+			Assert.AreEqual(nameof(ClientUser.IsActive), isActive.ColumnName);
+			Assert.AreEqual(ColumnBehavior.Basic, isActive.Behavior);
+			Assert.AreEqual(SqlOperation.None, isActive.IgnoreOperations);
+
+			foreach (var type in clientUserMap.TypeColumns)
+			{
+				Console.WriteLine(type.Key.Name);
+				foreach (var (property, columnMap) in type.Value.AsTuples())
+				{
+					Console.WriteLine($"-{property} => {columnMap.Behavior}");
+				}
+			}
+
+			Assert.AreSame(clientUserMap.TypeColumns[typeof(IClientRecord)].Values.First(), clientUserMap.TypeColumns[typeof(ClientUser)].Values.First());
+		}
 	}
 }

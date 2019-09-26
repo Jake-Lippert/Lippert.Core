@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Lippert.Core.Extensions;
 
 namespace Lippert.Core.Reflection
 {
-	/// <seealso cref="https://stackoverflow.com/a/3285867/595473"/>
 	public static class PropertyAccessor
 	{
 		/// <summary>
@@ -50,45 +47,23 @@ namespace Lippert.Core.Reflection
 		}
 
 		/// <summary>
-		/// Get an interface's version of a class's property or a class's version of an interface's property
+		/// Get the property info for a property specified by an expression
 		/// </summary>
-		public static PropertyInfo Get<TTarget>(PropertyInfo property) => Get(property, typeof(TTarget));
+		public static bool TryGet<T>(Expression<Func<T, object>> selector, out PropertyInfo propertyInfo) => TryGet<T, object>(selector, out propertyInfo);
 		/// <summary>
-		/// Get an interface's version of a class's property or a class's version of an interface's property
+		/// Get the property info for a property specified by an expression
 		/// </summary>
-		public static PropertyInfo Get(PropertyInfo property, Type targetType)
+		public static bool TryGet<T, TProperty>(Expression<Func<T, TProperty>> selector, out PropertyInfo propertyInfo)
 		{
-			MethodInfo targetMethod = default;
-			var getter = property.GetMethod;
-			if (targetType.IsInterface)
+			try
 			{
-				if (property.DeclaringType.IsInterface)
-				{
-					throw new InvalidOperationException($"The type '{targetType.Name}' and the declaring type of property '{nameof(property)}' cannot both be interfaces.");
-				}
-
-				var mapping = property.DeclaringType.GetInterfaceMap(targetType);
-
-				//--Get the interface's version of a class's property
-				targetMethod = mapping.TargetMethods.Zip(mapping.InterfaceMethods, (target, @interface) => (target, @interface))
-					.FirstOrDefault(x => x.target == getter).@interface;
+				return (propertyInfo = Get(selector)) != default;
 			}
-			else
+			catch
 			{
-				if (!property.DeclaringType.IsInterface)
-				{
-					throw new InvalidOperationException($"The type '{targetType.Name}' and the declaring type of property '{nameof(property)}' cannot both be classes.");
-				}
-
-				var mapping = targetType.GetInterfaceMap(property.DeclaringType);
-
-				//--Get the class's version of an interface's property
-				targetMethod = mapping.InterfaceMethods.Zip(mapping.TargetMethods, (@interface, target) => (@interface, target))
-					.FirstOrDefault(x => x.@interface == getter).target;
+				propertyInfo = default;
+				return false;
 			}
-
-			return targetMethod?.With(target => targetType.GetProperties(BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.Public | BindingFlags.NonPublic)
-				.FirstOrDefault(targetProperty => target == targetProperty.GetMethod));
 		}
 	}
 }

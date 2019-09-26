@@ -1,5 +1,6 @@
 ﻿using System;
 using Lippert.Core.Reflection;
+using Lippert.Core.Reflection.Extensions;
 using Lippert.Core.Tests.TestSchema;
 using Lippert.Core.Tests.TestSchema.Contracts;
 using NUnit.Framework;
@@ -15,8 +16,8 @@ namespace Lippert.Core.Tests.Reflection
 			var propIC = PropertyAccessor.Get<ICreateFields>(x => x.CreatedByUserId);
 			var propICE = PropertyAccessor.Get<ICreateEditFields>(x => x.CreatedByUserId);
 			var propC = PropertyAccessor.Get<Client>(x => x.CreatedByUserId);
-			var propCIC = PropertyAccessor.Get<Client>(propIC);
-			var propCICE = PropertyAccessor.Get<Client>(propICE);
+			var propCIC = propIC.Get<Client>();
+			var propCICE = propICE.Get<Client>();
 			Console.WriteLine($"IC: {propIC.ReflectedType}.{propIC.Name}");
 			Console.WriteLine($"ICE: {propICE.ReflectedType}.{propICE.Name}");
 			Console.WriteLine($"C: {propC.ReflectedType}.{propC.Name}");
@@ -39,7 +40,7 @@ namespace Lippert.Core.Tests.Reflection
 			var propI = PropertyAccessor.Get<IGuidIdentifier>(x => x.Id);
 			var propU = PropertyAccessor.Get<User>(x => x.Id);
 			var propE = PropertyAccessor.Get<Employee>(x => x.Id);
-			var propEI = PropertyAccessor.Get<Employee>(propI);
+			var propEI = propI.Get<Employee>();
 			Console.WriteLine($"I: {propI.ReflectedType}.{propI.Name}");
 			Console.WriteLine($"U: {propU.ReflectedType}.{propU.Name}");
 			Console.WriteLine($"E: {propE.ReflectedType}.{propE.Name}");
@@ -57,8 +58,8 @@ namespace Lippert.Core.Tests.Reflection
 			var propIC = PropertyAccessor.Get<ICreateFields>(x => x.CreatedByUserId);
 			var propICE = PropertyAccessor.Get<ICreateEditFields>(x => x.CreatedByUserId);
 			var propC = PropertyAccessor.Get<Client>(x => x.CreatedByUserId);
-			var propICC = PropertyAccessor.Get<ICreateFields>(propC);
-			var propICEC = PropertyAccessor.Get<ICreateEditFields>(propC);
+			var propICC = propC.Get<ICreateFields>();
+			var propICEC = propC.Get<ICreateEditFields>();
 			Console.WriteLine($"IC: {propIC.ReflectedType}.{propIC.Name}");
 			Console.WriteLine($"ICE: {propICE.ReflectedType}.{propICE.Name}");
 			Console.WriteLine($"C: {propC.ReflectedType}.{propC.Name}");
@@ -79,8 +80,8 @@ namespace Lippert.Core.Tests.Reflection
 		{
 			var propIC = PropertyAccessor.Get<ICreateFields>(x => x.CreatedByUserId);
 			var propICE = PropertyAccessor.Get<ICreateEditFields>(x => x.CreatedByUserId);
-			Assert.Throws<InvalidOperationException>(() => PropertyAccessor.Get<ICreateEditFields>(propIC));
-			Assert.Throws<InvalidOperationException>(() => PropertyAccessor.Get<ICreateFields>(propICE));
+			Assert.Throws<InvalidOperationException>(() => propIC.Get<ICreateEditFields>());
+			Assert.Throws<InvalidOperationException>(() => propICE.Get<ICreateFields>());
 		}
 
 		[Test]
@@ -88,15 +89,15 @@ namespace Lippert.Core.Tests.Reflection
 		{
 			var propU = PropertyAccessor.Get<User>(x => x.Id);
 			var propE = PropertyAccessor.Get<Employee>(x => x.Id);
-			Assert.Throws<InvalidOperationException>(() => PropertyAccessor.Get<Employee>(propU));
-			Assert.Throws<InvalidOperationException>(() => PropertyAccessor.Get<User>(propE));
+			Assert.Throws<InvalidOperationException>(() => propU.Get<Employee>());
+			Assert.Throws<InvalidOperationException>(() => propE.Get<User>());
 		}
 
 		[Test]
 		public void TestPropertyDoesntExistOnInterfaceTarget()
 		{
 			var propC = PropertyAccessor.Get<Client>(x => x.ModifiedByUserId);
-			var propICC = PropertyAccessor.Get<ICreateFields>(propC);
+			var propICC = propC.Get<ICreateFields>();
 			Assert.IsNull(propICC);
 		}
 
@@ -104,14 +105,14 @@ namespace Lippert.Core.Tests.Reflection
 		public void TestSourceClassDoesntHaveTargetInterface()
 		{
 			var propU = PropertyAccessor.Get<User>(x => x.Id);
-			Assert.Throws<ArgumentException>(() => PropertyAccessor.Get<ICreateFields>(propU));
+			Assert.Throws<ArgumentException>(() => propU.Get<ICreateFields>());
 		}
 
 		[Test]
 		public void TestTargetClassDoesntHaveSourceInterface()
 		{
 			var propIC = PropertyAccessor.Get<ICreateFields>(x => x.CreatedByUserId);
-			Assert.Throws<ArgumentException>(() => PropertyAccessor.Get<User>(propIC));
+			Assert.Throws<ArgumentException>(() => propIC.Get<User>());
 		}
 
 		[Test]
