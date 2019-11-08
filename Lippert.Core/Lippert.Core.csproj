@@ -5,7 +5,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageId>Lippert.Core</PackageId>
-		<Version>0.2.0</Version>
+		<Version>0.3.0</Version>
 		<Authors>Jake Lippert</Authors>
 		<Copyright>Jake Lippert 2019</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -18,7 +18,11 @@
 - Initial publish of functionality; waiting on C#8 before bumping version up to 1.0.0 due to a likely removal of TypeSwitch
 0.2.0
 - Splitting builders out into valued and non-valued variants
-- Reducing .Net target framework requirement to 4.5</PackageReleaseNotes>
+- Reducing .Net target framework requirement to 4.5
+0.3.0
+- Reworking table map construction reflection so that column properties are reduced to their most-base class/interface when used for mapping to avoid duplicates
+- Removing TypeSwitch due to its inclusion within C#8
+- Fixing a typo in SqlServerQueryBuilder</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">

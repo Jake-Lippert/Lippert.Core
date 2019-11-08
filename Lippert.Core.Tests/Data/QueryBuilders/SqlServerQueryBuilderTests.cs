@@ -90,7 +90,7 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 			var queryLines = SplitQuery(query);
 			Assert.AreEqual(3, queryLines.Length);
 			Assert.AreEqual("insert into [Client]([CreatedByUserId], [ModifiedByUserId], [Name], [IsActive])", queryLines[0]);
-			Assert.AreEqual("ouput inserted.[Id], inserted.[CreatedDateUtc], inserted.[ModifiedDateUtc]", queryLines[1]);
+			Assert.AreEqual("output inserted.[Id], inserted.[CreatedDateUtc], inserted.[ModifiedDateUtc]", queryLines[1]);
 			Assert.AreEqual("values(@CreatedByUserId, @ModifiedByUserId, @Name, @IsActive)", queryLines[2]);
 		}
 

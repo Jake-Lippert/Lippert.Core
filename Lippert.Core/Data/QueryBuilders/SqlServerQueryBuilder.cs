@@ -53,7 +53,7 @@ namespace Lippert.Core.Data.QueryBuilders
 			{
 				return string.Join(Environment.NewLine,
 					insert,
-					$"ouput {string.Join(", ", generatedColumns.Select(c => $"inserted.{BuildColumnIdentifier(c)}"))}",
+					$"output {string.Join(", ", generatedColumns.Select(c => $"inserted.{BuildColumnIdentifier(c)}"))}",
 					values);
 			}
 			else
