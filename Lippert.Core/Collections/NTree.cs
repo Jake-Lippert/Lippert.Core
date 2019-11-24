@@ -7,7 +7,7 @@ namespace Lippert.Core.Collections
 	/// <summary>
 	/// Represents a tree whose nodes may contain any number of child nodes
 	/// </summary>
-	public class NTree<T, TId> : IEnumerable<T>
+	public class NTree<T> : IEnumerable<T>
 	{
 		/// <summary>
 		/// Creates an N-Tree
@@ -16,10 +16,10 @@ namespace Lippert.Core.Collections
 		public NTree(T value) => Value = value;
 
 		public T Value { get; }
-		public List<NTree<T, TId>> Children { get; set; } = new List<NTree<T, TId>>();
+		public List<NTree<T>> Children { get; set; } = new List<NTree<T>>();
 
-		public void Add(T child) => Add(new NTree<T, TId>(child));
-		public void Add(NTree<T, TId> child) => Children.Add(child);
+		public void Add(T child) => Add(new NTree<T>(child));
+		public void Add(NTree<T> child) => Children.Add(child);
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 		public IEnumerator<T> GetEnumerator() => EnumerateTree().GetEnumerator();

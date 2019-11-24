@@ -275,7 +275,7 @@ namespace Lippert.Core.Tests.Collections.Extensions
 		public void TestBuildsNTreeAndEnumerates()
 		{
 			//--Arrange
-			var expectedDirectories = new[]
+			var expectedDirectories = new string?[]
 			{
 				"Dir A",
 				"Dir A/Dir A1",
@@ -296,7 +296,7 @@ namespace Lippert.Core.Tests.Collections.Extensions
 			};
 
 			//--Act
-			var tree = expectedDirectories.ToNTree(x => x, x => x.LastIndexOf('/') < 0 ? null : x.Substring(0, x.LastIndexOf('/')));
+			var tree = expectedDirectories.ToNTree(x => x, x => x!.LastIndexOf('/') < 0 ? null : x.Substring(0, x.LastIndexOf('/')), null);
 
 			//--Assert
 			Assert.AreEqual(expectedDirectories.Length + 1, tree.Count());

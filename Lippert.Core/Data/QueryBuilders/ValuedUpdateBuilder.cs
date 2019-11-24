@@ -14,12 +14,12 @@ namespace Lippert.Core.Data.QueryBuilders
 
 		public ValuedUpdateBuilder<T> Set<TColumn>(Expression<Func<T, TColumn>> column, TColumn value)
 		{
-			((IValuedUpdateBuilder<T>)this).Set(PropertyAccessor.Get(column ?? throw new ArgumentNullException(nameof(column))), value);
+			((IValuedUpdateBuilder<T>)this).Set(PropertyAccessor.Get(column), value);
 			return this;
 		}
-		void IValuedUpdateBuilder<T>.Set(System.Reflection.PropertyInfo column, object value)
+		void IValuedUpdateBuilder<T>.Set(System.Reflection.PropertyInfo column, object? value)
 		{
-			var columnMap = TableMap[column ?? throw new ArgumentNullException(nameof(column))];
+			var columnMap = TableMap[column];
 			if (!TableMap.UpdateColumns.Contains(columnMap))
 			{
 				throw new ArgumentException($"The column '{columnMap.ColumnName}' is not available for updates.", nameof(column));
@@ -31,7 +31,7 @@ namespace Lippert.Core.Data.QueryBuilders
 
 		public ValuedUpdateBuilder<T> Key<TKey>(TKey key)
 		{
-			base.Key(key);
+			base.Key(key ?? throw new ArgumentNullException(nameof(key)));
 			return this;
 		}
 

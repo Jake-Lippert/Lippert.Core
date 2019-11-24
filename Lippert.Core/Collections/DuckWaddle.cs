@@ -98,16 +98,11 @@ namespace Lippert.Core.Collections
 		/// <returns></returns>
 		public static (List<T> Left, List<(T Left, T Right)> Both, List<T> Right) Compare<T>(IEnumerable<T> left, IEnumerable<T> right, IComparer<T> comparer)
 		{
-			var result = new
-			{
-				Left = new List<T>(),
-				Both = new List<(T, T)>(),
-				Right = new List<T>()
-			};
+			var result = (Left: new List<T>(), Both: new List<(T, T)>(), Right: new List<T>());
 
 			Compare(left, right, comparer, l => result.Left.Add(l), (l, r) => result.Both.Add((l, r)), r => result.Right.Add(r));
 
-			return (result.Left, result.Both, result.Right);
+			return result;
 		}
 
 		/// <summary>

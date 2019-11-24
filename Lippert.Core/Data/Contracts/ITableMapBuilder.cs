@@ -9,7 +9,7 @@ namespace Lippert.Core.Data.Contracts
 		Type ModelType { get; }
 		bool HandlesType<T>();
 
-		List<(PropertyInfo column, object value)> GetInsertValues();
-		List<(PropertyInfo column, object value)> GetUpdateValues();
+		List<(PropertyInfo column, object? value)> GetInsertValues();
+		List<(PropertyInfo column, object? value)> GetUpdateValues();
 	}
 }

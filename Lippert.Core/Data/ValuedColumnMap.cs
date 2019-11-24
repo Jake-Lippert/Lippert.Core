@@ -7,14 +7,14 @@ namespace Lippert.Core.Data
 	{
 		private readonly IColumnMap _column;
 
-		internal ValuedColumnMap(IColumnMap column, object value)
+		internal ValuedColumnMap(IColumnMap column, object? value)
 		{
 			_column = column;
 			Value = value;
 		}
 
 
-		public object Value { get; }
+		public object? Value { get; }
 
 		public PropertyInfo Property => _column.Property;
 

@@ -2,10 +2,12 @@
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageId>Lippert.Core</PackageId>
-		<Version>0.3.0</Version>
+		<Version>0.4.0</Version>
 		<Authors>Jake Lippert</Authors>
 		<Copyright>Jake Lippert 2019</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -22,7 +24,9 @@
 0.3.0
 - Reworking table map construction reflection so that column properties are reduced to their most-base class/interface when used for mapping to avoid duplicates
 - Removing TypeSwitch due to its inclusion within C#8
-- Fixing a typo in SqlServerQueryBuilder</PackageReleaseNotes>
+- Fixing a typo in SqlServerQueryBuilder
+0.4.0
+- Enabling nullable reference types and treating warnings as errors</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">

@@ -21,8 +21,8 @@ namespace Lippert.Core.Tests.Reflection
 			Console.WriteLine($"IC: {propIC.ReflectedType}.{propIC.Name}");
 			Console.WriteLine($"ICE: {propICE.ReflectedType}.{propICE.Name}");
 			Console.WriteLine($"C: {propC.ReflectedType}.{propC.Name}");
-			Console.WriteLine($"CIC: {propCIC.ReflectedType}.{propCIC.Name}");
-			Console.WriteLine($"CICE: {propCICE.ReflectedType}.{propCICE.Name}");
+			Console.WriteLine($"CIC: {propCIC?.ReflectedType}.{propCIC?.Name}");
+			Console.WriteLine($"CICE: {propCICE?.ReflectedType}.{propCICE?.Name}");
 
 			Assert.AreEqual(propIC, propICE);
 			Assert.AreEqual(propCIC, propCICE);
@@ -44,12 +44,12 @@ namespace Lippert.Core.Tests.Reflection
 			Console.WriteLine($"I: {propI.ReflectedType}.{propI.Name}");
 			Console.WriteLine($"U: {propU.ReflectedType}.{propU.Name}");
 			Console.WriteLine($"E: {propE.ReflectedType}.{propE.Name}");
-			Console.WriteLine($"EI: {propEI.ReflectedType}.{propEI.Name}");
+			Console.WriteLine($"EI: {propEI?.ReflectedType}.{propEI?.Name}");
 
 			//--Employee inherits User, so the property is actually User's
 			Assert.AreEqual(propU, propE);
-			Assert.AreEqual(typeof(User), propEI.DeclaringType);
-			Assert.AreEqual(typeof(Employee), propEI.ReflectedType);
+			Assert.AreEqual(typeof(User), propEI?.DeclaringType);
+			Assert.AreEqual(typeof(Employee), propEI?.ReflectedType);
 		}
 
 		[Test]
@@ -63,7 +63,7 @@ namespace Lippert.Core.Tests.Reflection
 			Console.WriteLine($"IC: {propIC.ReflectedType}.{propIC.Name}");
 			Console.WriteLine($"ICE: {propICE.ReflectedType}.{propICE.Name}");
 			Console.WriteLine($"C: {propC.ReflectedType}.{propC.Name}");
-			Console.WriteLine($"ICC: {propICC.ReflectedType}.{propICC.Name}");
+			Console.WriteLine($"ICC: {propICC?.ReflectedType}.{propICC?.Name}");
 			Console.WriteLine($"ICEC: {propICEC?.ReflectedType}.{propICEC?.Name}");
 
 			Assert.AreEqual(propIC, propICE);

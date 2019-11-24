@@ -2,6 +2,6 @@
 {
 	public interface IValuedColumnMap : IColumnMap
 	{
-		object Value { get; }
+		object? Value { get; }
 	}
 }

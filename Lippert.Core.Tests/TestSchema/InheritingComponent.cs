@@ -11,7 +11,7 @@ namespace Lippert.Core.Tests.TestSchema
 			get => base.Id;
 			set => base.Id = value;
 		}
-		public string Category { get; set; }
+		public string Category { get; set; } = string.Empty;
 		public decimal Cost { get; set; }
 	}
 }

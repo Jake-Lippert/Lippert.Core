@@ -19,9 +19,9 @@ namespace Lippert.Core.Data
 			where TRecord : TComponent;
 
 
-		public virtual List<(PropertyInfo column, object value)> GetInsertValues() => new List<(PropertyInfo, object)>();
-		public virtual List<(PropertyInfo column, object value)> GetUpdateValues() => new List<(PropertyInfo, object)>();
+		public virtual List<(PropertyInfo column, object? value)> GetInsertValues() => new List<(PropertyInfo, object?)>();
+		public virtual List<(PropertyInfo column, object? value)> GetUpdateValues() => new List<(PropertyInfo, object?)>();
 
-		protected (PropertyInfo column, object value) SetValue<TProperty>(Expression<Func<TComponent, TProperty>> column, TProperty value) => (PropertyAccessor.Get(column), value);
+		protected (PropertyInfo column, object? value) SetValue<TProperty>(Expression<Func<TComponent, TProperty>> column, TProperty value) => (PropertyAccessor.Get(column), value);
 	}
 }

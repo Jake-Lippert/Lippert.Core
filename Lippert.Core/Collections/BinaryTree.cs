@@ -18,8 +18,8 @@ namespace Lippert.Core.Collections
 		public BinaryTree(T value) => Value = value;
 
 		public T Value { get; }
-		public BinaryTree<T> Left { get; private set; }
-		public BinaryTree<T> Right { get; private set; }
+		public BinaryTree<T>? Left { get; private set; }
+		public BinaryTree<T>? Right { get; private set; }
 
 		public void Add(T child) => Add(new BinaryTree<T>(child));
 		public void Add(BinaryTree<T> child)

@@ -32,28 +32,22 @@ namespace Lippert.Core.Reflection
 
 			throw new ArgumentException("Selector must be lambda expression", nameof(selector));
 
-			MemberExpression ExtractMemberExpression(Expression expression)
+			static MemberExpression? ExtractMemberExpression(Expression expression) => expression switch
 			{
-				switch (expression)
-				{
-					case MemberExpression memberExpression:
-						return memberExpression;
-					case UnaryExpression unaryExpression:
-						return ExtractMemberExpression(unaryExpression.Operand);
-					default:
-						return default;
-				}
-			}
+				MemberExpression memberExpression => memberExpression,
+				UnaryExpression unaryExpression => ExtractMemberExpression(unaryExpression.Operand),
+				_ => default,
+			};
 		}
 
 		/// <summary>
 		/// Get the property info for a property specified by an expression
 		/// </summary>
-		public static bool TryGet<T>(Expression<Func<T, object>> selector, out PropertyInfo propertyInfo) => TryGet<T, object>(selector, out propertyInfo);
+		public static bool TryGet<T>(Expression<Func<T, object>> selector, out PropertyInfo? propertyInfo) => TryGet<T, object>(selector, out propertyInfo);
 		/// <summary>
 		/// Get the property info for a property specified by an expression
 		/// </summary>
-		public static bool TryGet<T, TProperty>(Expression<Func<T, TProperty>> selector, out PropertyInfo propertyInfo)
+		public static bool TryGet<T, TProperty>(Expression<Func<T, TProperty>> selector, out PropertyInfo? propertyInfo)
 		{
 			try
 			{

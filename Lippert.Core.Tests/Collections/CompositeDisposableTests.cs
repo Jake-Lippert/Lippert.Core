@@ -28,7 +28,7 @@ namespace Lippert.Core.Tests.Collections
 			{
 				foreach (var part in (System.Collections.IEnumerable)composite)
 				{
-					results.Add((part as IDisposableThing).DoThing());
+					results.Add(((IDisposableThing)part).DoThing());
 				}
 				foreach (var disposable in composite)
 				{

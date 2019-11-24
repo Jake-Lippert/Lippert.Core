@@ -89,7 +89,7 @@ namespace Lippert.Core.Tests.Collections
 
 		public interface IStringFactory
 		{
-			string GetString();
+			string? GetString();
 		}
 	}
 }

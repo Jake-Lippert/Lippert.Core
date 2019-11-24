@@ -10,12 +10,12 @@ namespace Lippert.Core.Configuration
 	/// </summary>
 	public static class ReflectingRegistrationSource
 	{
-		public static string CodebaseNamespacePrefix { get; set; }
+		public static string? CodebaseNamespacePrefix { get; set; }
 
 		/// <summary>
 		/// Does this assembly's name match the pattern of assemblies within our codebase?
 		/// </summary>
-		private static bool IsCodebaseAssembly(Assembly assembly) => assembly.GetName().Name.StartsWith($"{CodebaseNamespacePrefix}.");
+		private static bool IsCodebaseAssembly(Assembly assembly) => CodebaseNamespacePrefix is string prefix && assembly.GetName().Name.StartsWith($"{prefix}.");
 
 		/// <summary>
 		/// Finds all of the assemblies belonging to our codebase.
@@ -23,7 +23,7 @@ namespace Lippert.Core.Configuration
 		/// <remarks>
 		/// If a starting assembly is not provided, the current AppDomain's assemblies will be used as starting points for recursive calls.
 		/// </remarks>
-		public static List<Assembly> GetAllCodebaseAssemblies(Assembly parent = null) =>
+		public static List<Assembly> GetAllCodebaseAssemblies(Assembly? parent = null) =>
 			(parent?.GetReferencedAssemblies().Select(Assembly.Load) ?? AppDomain.CurrentDomain.GetAssemblies())
 				.Where(IsCodebaseAssembly)
 				.SelectMany(GetAllCodebaseAssemblies)

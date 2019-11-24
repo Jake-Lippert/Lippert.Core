@@ -21,7 +21,7 @@ namespace Lippert.Core.Collections.Extensions
 		/// <summary>
 		/// Returns an empty enumerable if the source is null
 		/// </summary>
-		public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T> source) => source ?? Enumerable.Empty<T>();
+		public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source) => source ?? Enumerable.Empty<T>();
 
 		/// <summary>
 		/// Projects each element of a sequence into a named tuple including the element's index
@@ -96,7 +96,7 @@ namespace Lippert.Core.Collections.Extensions
 		public static BinaryTree<T> ToBinaryTree<T>(this IEnumerable<T> source)
 			where T : IComparable<T>
 		{
-			BinaryTree<T> tree = null;
+			BinaryTree<T>? tree = null;
 			foreach (var item in source)
 			{
 				if (tree == null)
@@ -121,15 +121,17 @@ namespace Lippert.Core.Collections.Extensions
 		/// Builds an N-Tree given the parent-child relations specified
 		/// </summary>
 		/// <seealso cref="https://stackoverflow.com/a/18018037/595473"/>
-		public static NTree<T, TId> ToNTree<T, TId>(this IEnumerable<T> source, Func<T, TId> idSelector, Func<T, TId> parentIdSelector)
+		public static NTree<T> ToNTree<T, TId>(this IEnumerable<T> source, Func<T, TId> idSelector, Func<T, TId> parentIdSelector, T defaultRoot)
 		{
 			//--Initialize the map
-			var nodeMap = source.ToDictionary(idSelector, x => (ParentId: parentIdSelector(x), Tree: new NTree<T, TId>(x)));
+			var nodeMap = source.ToDictionary(idSelector, x => (ParentId: parentIdSelector(x), Tree: new NTree<T>(x)));
 
-			var roots = new List<NTree<T, TId>>();
+			var roots = new List<NTree<T>>();
 			foreach (var (parentId, tree) in nodeMap.Values)
 			{
-				if (Equals(parentId, default(TId)))
+				//--TODO: I don't like adding the !, but it seems to be the only way to avoid being yelled at by the compiler at the moment.
+				//  Besides, the Equals check won't explode if the default value ends up being null
+				if (Equals(parentId, default(TId)!))
 				{
 					roots.Add(tree);
 				}
@@ -140,7 +142,7 @@ namespace Lippert.Core.Collections.Extensions
 				}
 			}
 
-			return roots.Count == 1 ? roots.Single() : new NTree<T, TId>(default)
+			return roots.Count == 1 ? roots.Single() : new NTree<T>(defaultRoot)
 			{
 				Children = roots
 			};

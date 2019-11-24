@@ -12,7 +12,7 @@ namespace Lippert.Core.Tests.TestSchema
 		public Guid ModifiedByUserId { get; set; }
 		public DateTime ModifiedDateUtc { get; set; }
 
-		public string Name { get; set; }
+		public string Name { get; set; } = string.Empty;
 		public bool IsActive { get; set; }
 	}
 }

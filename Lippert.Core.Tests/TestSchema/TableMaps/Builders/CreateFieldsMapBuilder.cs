@@ -15,7 +15,7 @@ namespace Lippert.Core.Tests.TestSchema.TableMaps.Builders
 		}
 
 
-		public override List<(PropertyInfo column, object value)> GetInsertValues() => new List<(PropertyInfo column, object value)>
+		public override List<(PropertyInfo column, object? value)> GetInsertValues() => new List<(PropertyInfo column, object? value)>
 		{
 			SetValue(x => x.CreatedByUserId, ClaimsProvider.UserClaims.UserId)
 		};

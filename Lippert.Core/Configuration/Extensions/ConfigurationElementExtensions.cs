@@ -8,7 +8,7 @@ namespace Lippert.Core.Configuration.Extensions
 	/// </summary>
 	public static class ConfigurationElementExtensions
 	{
-		public static T OnlyIfPresent<T>(this T element)
+		public static T? OnlyIfPresent<T>(this T element)
 			where T : ConfigurationElement => element.ElementInformation.IsPresent ? element : null;
 	}
 }

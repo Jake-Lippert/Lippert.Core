@@ -30,7 +30,7 @@ namespace Lippert.Core.Data
 		/// <param name="includePropertiesAssignableTo">The lowest class that properties should be included from</param>
 		public TableMap(Type includePropertiesAssignableTo)
 		{
-			Table(ModelType.Name);
+			Table(TableName = ModelType.Name);//--'TableName = ' is a slight hack to get the compiler to stop yelling about it not being set, even though Table(...) would have set it or thrown an exception
 
 			if (includePropertiesAssignableTo.IsInterface || !includePropertiesAssignableTo.IsAssignableFrom(ModelType))
 			{
@@ -148,14 +148,18 @@ namespace Lippert.Core.Data
 					targetProperty = declaringProperty;
 				}
 				//--Map a class's or interface's property to the loop's current interface or class
-				else if (!declaringProperty.TryGet(type, out targetProperty))
+				else if (declaringProperty.TryGet(type, out var mappedProperty))
+				{
+					targetProperty = mappedProperty!;
+				}
+				else
 				{
 					continue;
 				}
 
 				if (_includePropertiesAssignableTo.IsAssignableFrom(targetProperty.DeclaringType) ||
 					declaringProperty.TryGet(ModelType, out var typeProperty) &&
-						_includePropertiesAssignableTo.IsAssignableFrom(typeProperty.DeclaringType))
+						_includePropertiesAssignableTo.IsAssignableFrom(typeProperty!.DeclaringType))
 				{
 					columns[targetProperty] = columnMap;
 				}

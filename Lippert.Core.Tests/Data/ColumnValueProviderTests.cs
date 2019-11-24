@@ -89,7 +89,7 @@ namespace Lippert.Core.Tests.Data
 			Assert.AreEqual(_currentUserId, updateBuilder.GetSetColumns()
 				.OfType<ValuedColumnMap>()
 				.Single(x => x.ColumnName == nameof(Client.ModifiedByUserId)).Value);
-			var modifiedDateUtc = (DateTime)updateBuilder.GetSetColumns()
+			var modifiedDateUtc = (DateTime?)updateBuilder.GetSetColumns()
 				.OfType<ValuedColumnMap>()
 				.Single(x => x.ColumnName == nameof(Client.ModifiedDateUtc)).Value;
 			Assert.LessOrEqual(now, modifiedDateUtc);

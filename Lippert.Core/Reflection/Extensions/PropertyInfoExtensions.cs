@@ -10,14 +10,14 @@ namespace Lippert.Core.Reflection.Extensions
 		/// <summary>
 		/// Get an interface's version of a class's property or a class's version of an interface's property
 		/// </summary>
-		public static PropertyInfo Get<TTarget>(this PropertyInfo property) => Get(property, typeof(TTarget));
+		public static PropertyInfo? Get<TTarget>(this PropertyInfo property) => Get(property, typeof(TTarget));
 		/// <summary>
 		/// Get an interface's version of a class's property or a class's version of an interface's property
 		/// </summary>
 		/// <seealso cref="https://stackoverflow.com/a/3285867/595473"/>
-		public static PropertyInfo Get(this PropertyInfo property, Type targetType)
+		public static PropertyInfo? Get(this PropertyInfo property, Type targetType)
 		{
-			MethodInfo targetMethod = default;
+			MethodInfo? targetMethod = default;
 			var getter = property.GetMethod;
 			if (targetType.IsInterface)
 			{
@@ -61,7 +61,7 @@ namespace Lippert.Core.Reflection.Extensions
 				{
 					if (property.TryGet(@interface, out var propertyInfo))
 					{
-						return (@interface, propertyInfo);
+						return (@interface, propertyInfo!);
 					}
 				}
 			}
@@ -72,11 +72,11 @@ namespace Lippert.Core.Reflection.Extensions
 		/// <summary>
 		/// Get an interface's version of a class's property or a class's version of an interface's property
 		/// </summary>
-		public static bool TryGet<TTarget>(this PropertyInfo property, out PropertyInfo propertyInfo) => TryGet(property, typeof(TTarget), out propertyInfo);
+		public static bool TryGet<TTarget>(this PropertyInfo property, out PropertyInfo? propertyInfo) => TryGet(property, typeof(TTarget), out propertyInfo);
 		/// <summary>
 		/// Get an interface's version of a class's property or a class's version of an interface's property
 		/// </summary>
-		public static bool TryGet(this PropertyInfo property, Type targetType, out PropertyInfo propertyInfo)
+		public static bool TryGet(this PropertyInfo property, Type targetType, out PropertyInfo? propertyInfo)
 		{
 			try
 			{

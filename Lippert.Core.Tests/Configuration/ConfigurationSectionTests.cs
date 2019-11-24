@@ -34,7 +34,7 @@ namespace Lippert.Core.Tests.Configuration
 		/// </summary>
 		[ConfigurationProperty(nameof(ElementB), IsRequired = false)]
 		private ConfigElementB ElementBPrivate => (ConfigElementB)base[nameof(ElementB)];
-		public ConfigElementB ElementB => ElementBPrivate.OnlyIfPresent();
+		public ConfigElementB? ElementB => ElementBPrivate.OnlyIfPresent();
 
 		[ConfigurationProperty(nameof(FromAddress), IsRequired = true)]
 		public string FromAddress => (string)base[nameof(FromAddress)];

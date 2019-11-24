@@ -10,7 +10,7 @@ namespace Lippert.Core.Collections
 	/// <typeparam name="T">The type of items to be stored in the pool</typeparam>
 	public class ResourcePool<T> : IDisposable where T : class
 	{
-		private readonly Func<ResourcePool<T>, T> _factoryMethod;
+		private readonly Func<ResourcePool<T>, T?> _factoryMethod;
 		private ConcurrentQueue<PoolItem> _freeItems = new ConcurrentQueue<PoolItem>();
 		private ConcurrentQueue<AutoResetEvent> _waitLocks = new ConcurrentQueue<AutoResetEvent>();
 		private ConcurrentDictionary<AutoResetEvent, PoolItem> _syncContext = new ConcurrentDictionary<AutoResetEvent, PoolItem>();
@@ -19,13 +19,26 @@ namespace Lippert.Core.Collections
 		/// Creates a new pool
 		/// </summary>
 		/// <param name="factory">The factory method to create new items to be stored in the pool</param>
-		public ResourcePool(Func<ResourcePool<T>, T> factory)
+		public ResourcePool(Func<T?> factory)
+		{
+			if (factory is null)
+			{
+				throw new ArgumentNullException(nameof(factory));
+			}
+
+			_factoryMethod = (ResourcePool<T> pool) => factory();
+		}
+		/// <summary>
+		/// Creates a new pool
+		/// </summary>
+		/// <param name="factory">The factory method to create new items to be stored in the pool</param>
+		public ResourcePool(Func<ResourcePool<T>, T?> factory)
 		{
 			_factoryMethod = factory ?? throw new ArgumentNullException(nameof(factory));
 		}
 
 
-		public Action<T> CleanupPoolItem { get; set; }
+		public Action<T>? CleanupPoolItem { get; set; }
 
 		/// <summary>
 		/// Gets the current count of items in the pool
@@ -50,9 +63,10 @@ namespace Lippert.Core.Collections
 				}
 
 				Count = 0;
-				_freeItems = null;
-				_waitLocks = null;
-				_syncContext = null;
+				//--We're disposing this, therefore these nulls shouldn't ever be seen by anything
+				_freeItems = null!;
+				_waitLocks = null!;
+				_syncContext = null!;
 			}
 		}
 
@@ -67,7 +81,7 @@ namespace Lippert.Core.Collections
 			// try to get an item
 			if (!TryGetItem(out var item))
 			{
-				AutoResetEvent waitLock = null;
+				AutoResetEvent? waitLock = null;
 
 				lock (this)
 				{
@@ -89,10 +103,10 @@ namespace Lippert.Core.Collections
 				}
 			}
 
-			return item;
+			return item ?? throw new InvalidOperationException("Cannot return a null pool item");
 		}
 
-		private bool TryGetItem(out PoolItem item)
+		private bool TryGetItem(out PoolItem? item)
 		{
 			// try to get an already pooled resource
 			if (_freeItems.TryDequeue(out item))
@@ -103,25 +117,19 @@ namespace Lippert.Core.Collections
 			lock (this)
 			{
 				// try to create a new resource
-				var resource = _factoryMethod(this);
-				if (resource == null && Count == 0)
-				{
-					throw new InvalidOperationException("Pool empty and no item created");
-				}
-
-				if (resource != null)
+				if (_factoryMethod(this) is T resource)
 				{
 					// a new resource was created and can be returned
 					Count++;
 					item = new PoolItem(this, resource);
+					return true;
 				}
-				else
+				else if (Count == 0)
 				{
-					// no items available to return at the moment
-					item = null;
+					throw new InvalidOperationException("Pool empty and no item created");
 				}
 
-				return item != null;
+				return false;
 			}
 		}
 
@@ -176,7 +184,7 @@ namespace Lippert.Core.Collections
 			public void Dispose()
 			{
 				_pool.SendBackToPool(Resource);
-				Resource = null;
+				Resource = null!;//--We're disposing this, therefore this null shouldn't ever be seen by anything
 			}
 		}
 	}
