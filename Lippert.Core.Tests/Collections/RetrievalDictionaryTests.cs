@@ -85,6 +85,32 @@ namespace Lippert.Core.Tests.Collections
 			Assert.AreEqual(1, results.Skip(10).GroupBy(x => x.CompanyId).Count());
 		}
 
+		[Test]
+		public void TestTryGetValueAttemptsRetrieval([Values(false, true)] bool shouldFind)
+		{
+			//--Arrange
+			var id = Guid.NewGuid();
+			var repoMock = new Mock<IExpensiveOperationRepository>();
+			repoMock.Setup(x => x.RunQueryThatTakesForever(It.IsAny<Guid>()))
+				.Returns(() => shouldFind ? new TestSchema.Employee() : throw new NullReferenceException());
+
+			//--Act
+			var retrievalDictionary = RetrievalDictionary.Build((Guid id) => repoMock.Object.RunQueryThatTakesForever(id));
+			var found = retrievalDictionary.TryGetValue(id, out var result);
+
+			//--Assert
+			Assert.AreEqual(shouldFind, found);
+			repoMock.Verify(x => x.RunQueryThatTakesForever(id), Times.Exactly(1));
+			if (shouldFind)
+			{
+				Assert.IsNotNull(result);
+			}
+			else
+			{
+				Assert.IsNull(result);
+			}
+		}
+
 
 		public interface IExpensiveOperationRepository
 		{

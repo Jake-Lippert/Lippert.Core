@@ -47,11 +47,66 @@ namespace Lippert.Core.Collections.Extensions
 				on leftKeySelector(l) equals rightKeySelector(r) into joined
 			from j in joined.DefaultIfEmpty()
 			select resultSelector(l, j);
-		
+
+		public static IEnumerable<TResult> ProcessBatch<T, TResult>(this IEnumerable<T> source, int batchSize, Func<List<T>, TResult> func)
+		{
+			if (batchSize > 0)
+			{
+				var batch = new List<T>(batchSize);
+				foreach (var item in source)
+				{
+					batch.Add(item);
+
+					if (batch.Count >= batchSize)
+					{
+						yield return func(batch);
+						batch = new List<T>(batchSize);
+					}
+				}
+
+				if (batch.Count > 0)
+				{
+					yield return func(batch);
+				}
+			}
+			else
+			{
+				throw new ArgumentException($"'{nameof(batchSize)}' must be greater than 0");
+			}
+		}
+
 		public static IEnumerable<TResult> RightJoin<TLeft, TRight, TKey, TResult>(this IEnumerable<TLeft> left, IEnumerable<TRight> right,
 			Func<TLeft, TKey> leftKeySelector, Func<TRight, TKey> rightKeySelector,
 			Func<TLeft, TRight, TResult> resultSelector) =>
 			right.LeftJoin(left, rightKeySelector, leftKeySelector, (r, l) => resultSelector(l, r));
+
+		public static IEnumerable<TResult> Select<T1, T2, TResult>(this IEnumerable<(T1, T2)> source, Func<T1, T2, TResult> selector) => source.Select(x => selector(x.Item1, x.Item2));
+		public static IEnumerable<TResult> Select<T1, T2, T3, TResult>(this IEnumerable<(T1, T2, T3)> source, Func<T1, T2, T3, TResult> selector) => source.Select(x => selector(x.Item1, x.Item2, x.Item3));
+		public static IEnumerable<TResult> Select<T1, T2, T3, T4, TResult>(this IEnumerable<(T1, T2, T3, T4)> source, Func<T1, T2, T3, T4, TResult> selector) => source.Select(x => selector(x.Item1, x.Item2, x.Item3, x.Item4));
+		public static IEnumerable<TResult> Select<T1, T2, T3, T4, T5, TResult>(this IEnumerable<(T1, T2, T3, T4, T5)> source, Func<T1, T2, T3, T4, T5, TResult> selector) => source.Select(x => selector(x.Item1, x.Item2, x.Item3, x.Item4, x.Item5));
+		public static IEnumerable<TResult> Select<T1, T2, T3, T4, T5, T6, TResult>(this IEnumerable<(T1, T2, T3, T4, T5, T6)> source, Func<T1, T2, T3, T4, T5, T6, TResult> selector) => source.Select(x => selector(x.Item1, x.Item2, x.Item3, x.Item4, x.Item5, x.Item6));
+
+		/// <summary>
+		/// Builds a binary tree whose root node is the first value in source
+		/// </summary>
+		public static BinaryTree<T> ToBinaryTree<T>(this IEnumerable<T> source)
+			where T : IComparable<T>
+		{
+			BinaryTree<T>? tree = null;
+			foreach (var item in source)
+			{
+				if (tree == null)
+				{
+					tree = new BinaryTree<T>(item);
+				}
+				else
+				{
+					tree.Add(item);
+				}
+			}
+
+			return tree ?? throw new InvalidOperationException("The sequence must contain at least one element.");
+		}
 
 		/// <summary>
 		/// Builds a DataTable using the properties on the specified object
@@ -90,28 +145,6 @@ namespace Lippert.Core.Collections.Extensions
 			return dataTable;
 		}
 
-		/// <summary>
-		/// Builds a binary tree whose root node is the first value in source
-		/// </summary>
-		public static BinaryTree<T> ToBinaryTree<T>(this IEnumerable<T> source)
-			where T : IComparable<T>
-		{
-			BinaryTree<T>? tree = null;
-			foreach (var item in source)
-			{
-				if (tree == null)
-				{
-					tree = new BinaryTree<T>(item);
-				}
-				else
-				{
-					tree.Add(item);
-				}
-			}
-
-			return tree ?? throw new InvalidOperationException("The sequence must contain at least one element.");
-		}
-
 		public static MutableLookup<TKey, T> ToMutableLookup<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector) =>
 			source.ToMutableLookup(keySelector, x => x);
 		public static MutableLookup<TKey, TElement> ToMutableLookup<T, TKey, TElement>(this IEnumerable<T> source, Func<T, TKey> keySelector, Func<T, TElement> elementSelector) =>
@@ -147,5 +180,11 @@ namespace Lippert.Core.Collections.Extensions
 				Children = roots
 			};
 		}
+
+		public static IEnumerable<(T1, T2)> Where<T1, T2>(this IEnumerable<(T1, T2)> source, Func<T1, T2, bool> predicate) => source.Where(x => predicate(x.Item1, x.Item2));
+		public static IEnumerable<(T1, T2, T3)> Where<T1, T2, T3>(this IEnumerable<(T1, T2, T3)> source, Func<T1, T2, T3, bool> predicate) => source.Where(x => predicate(x.Item1, x.Item2, x.Item3));
+		public static IEnumerable<(T1, T2, T3, T4)> Where<T1, T2, T3, T4>(this IEnumerable<(T1, T2, T3, T4)> source, Func<T1, T2, T3, T4, bool> predicate) => source.Where(x => predicate(x.Item1, x.Item2, x.Item3, x.Item4));
+		public static IEnumerable<(T1, T2, T3, T4, T5)> Where<T1, T2, T3, T4, T5>(this IEnumerable<(T1, T2, T3, T4, T5)> source, Func<T1, T2, T3, T4, T5, bool> predicate) => source.Where(x => predicate(x.Item1, x.Item2, x.Item3, x.Item4, x.Item5));
+		public static IEnumerable<(T1, T2, T3, T4, T5, T6)> Where<T1, T2, T3, T4, T5, T6>(this IEnumerable<(T1, T2, T3, T4, T5, T6)> source, Func<T1, T2, T3, T4, T5, T6, bool> predicate) => source.Where(x => predicate(x.Item1, x.Item2, x.Item3, x.Item4, x.Item5, x.Item6));
 	}
 }

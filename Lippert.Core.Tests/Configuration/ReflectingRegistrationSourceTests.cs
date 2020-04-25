@@ -16,7 +16,7 @@ namespace Lippert.Core.Tests.Configuration
 
 			//--Act
 			var dependencies = ReflectingRegistrationSource.GetCodebaseDependencies()
-				.ToDictionary(x => (Type)x.Class, x => x.ImplementedInterfaces);
+				.ToDictionary(x => (Type)x.Key, x => x.AsEnumerable());
 
 			//--Assert
 			CollectionAssert.AreEquivalent(new Type[] { typeof(Core.Data.Contracts.IValuedColumnMap) }, dependencies[typeof(Core.Data.ValuedColumnMap)]);

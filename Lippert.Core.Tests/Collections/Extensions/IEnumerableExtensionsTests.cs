@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Lippert.Core.Collections.Extensions;
+using Moq;
 using NUnit.Framework;
 
 namespace Lippert.Core.Tests.Collections.Extensions
@@ -28,6 +30,54 @@ namespace Lippert.Core.Tests.Collections.Extensions
 				Assert.AreEqual(key < 5 ? null : key.ToString(), lr.nameR);
 			}
 		}
+
+
+		#region ProcessBatch
+		[Test]
+		public void TestProcessBatch([Values(-1, 0, 5, 10, 25, 75, 100)] int batchSize, [Values(0, 4, 10, 30, 50, 76, 105, 501)] int totalItems)
+		{
+			//--Arrange
+			var iteratedItemCount = 0;
+			var items = Enumerable.Range(0, totalItems)
+				.Select(x =>
+				{
+					iteratedItemCount++;
+					return x;
+				});
+
+			//--Mock
+			var logicMock = new Mock<IBatchedLogic>();
+			logicMock.Setup(x => x.ProcessItems(It.IsAny<List<int>>()))
+				.Returns((List<int> batchItems) => (Guid.NewGuid(), batchItems));
+
+			//--Act/Assert
+			var batches = new List<(Guid id, List<int> items)>();
+			Assert.Zero(iteratedItemCount);
+			try
+			{
+				foreach (var batch in items.ProcessBatch(batchSize, batch => logicMock.Object.ProcessItems(batch)))
+				{
+					batches.Add(batch);
+
+					Assert.AreEqual(batches.Sum(x => x.items.Count), iteratedItemCount);
+					logicMock.Verify(x => x.ProcessItems(It.IsAny<List<int>>()), Times.Exactly(batches.Count));
+				}
+
+				Assert.AreEqual(totalItems, iteratedItemCount);
+				Assert.AreEqual(totalItems / batchSize + (totalItems % batchSize > 0 ? 1 : 0), batches.Count);
+				Assert.AreEqual(totalItems, batches.Sum(x => x.items.Count));
+			}
+			catch (ArgumentException ae) when (batchSize <= 0)
+			{
+				Assert.AreEqual("'batchSize' must be greater than 0", ae.Message);
+			}
+		}
+		public interface IBatchedLogic
+		{
+			(Guid id, List<int> items) ProcessItems(List<int> items);
+		}
+		#endregion
+
 
 		[Test]
 		public void TestRightJoin()
@@ -159,7 +209,7 @@ namespace Lippert.Core.Tests.Collections.Extensions
 			//--Assert
 			Assert.AreEqual("ColumnValue", result.Columns[0].ColumnName);
 			Assert.AreEqual(typeof(byte), result.Columns[0].DataType);
-			foreach (var (x, i) in data.Indexed())
+			foreach (var (_, i) in data.Indexed())
 			{
 				Assert.AreEqual(DBNull.Value, result.Rows[i][0]);
 			}
@@ -179,7 +229,7 @@ namespace Lippert.Core.Tests.Collections.Extensions
 			//--Assert
 			Assert.AreEqual("ColumnValue", result.Columns[0].ColumnName);
 			Assert.AreEqual(typeof(short), result.Columns[0].DataType);
-			foreach (var (x, i) in data.Indexed())
+			foreach (var (_, i) in data.Indexed())
 			{
 				Assert.AreEqual(DBNull.Value, result.Rows[i][0]);
 			}
@@ -199,7 +249,7 @@ namespace Lippert.Core.Tests.Collections.Extensions
 			//--Assert
 			Assert.AreEqual("ColumnValue", result.Columns[0].ColumnName);
 			Assert.AreEqual(typeof(int), result.Columns[0].DataType);
-			foreach (var (x, i) in data.Indexed())
+			foreach (var (_, i) in data.Indexed())
 			{
 				Assert.AreEqual(DBNull.Value, result.Rows[i][0]);
 			}
@@ -219,7 +269,7 @@ namespace Lippert.Core.Tests.Collections.Extensions
 			//--Assert
 			Assert.AreEqual("ColumnValue", result.Columns[0].ColumnName);
 			Assert.AreEqual(typeof(long), result.Columns[0].DataType);
-			foreach (var (x, i) in data.Indexed())
+			foreach (var (_, i) in data.Indexed())
 			{
 				Assert.AreEqual(DBNull.Value, result.Rows[i][0]);
 			}

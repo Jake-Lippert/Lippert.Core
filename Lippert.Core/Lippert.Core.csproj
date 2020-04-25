@@ -26,7 +26,10 @@
 - Removing TypeSwitch due to its inclusion within C#8
 - Fixing a typo in SqlServerQueryBuilder
 0.4.0
-- Enabling nullable reference types and treating warnings as errors</PackageReleaseNotes>
+- Enabling nullable reference types and treating warnings as errors
+- Adding a new TryGetValue to RetrievalDictionary in order to easily handle failures during retrieval
+- Adding more enumerable extensions
+- Converting GetCodebaseDependencies's return to be a lookup, as that makes more sense than the tuple list</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">

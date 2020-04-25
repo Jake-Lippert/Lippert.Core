@@ -35,20 +35,18 @@ namespace Lippert.Core.Configuration
 		/// <summary>
 		/// Builds a list of classes in our codebase and their interfaces where there is only a single implementation
 		/// </summary>
-		public static List<(TypeInfo Class, List<Type> ImplementedInterfaces)> GetCodebaseDependencies()
+		public static ILookup<TypeInfo, Type> GetCodebaseDependencies()
 		{
 			var classes = GetAllCodebaseAssemblies()
 				.SelectMany(a => a.DefinedTypes)
 				.Where(c => c.IsClass && !c.IsAbstract)
 				.ToList();
 
-			return classes.Select(@class =>
+			return classes.SelectMany(@class => @class.GetInterfaces().Where(i => IsCodebaseAssembly(i.Assembly) && classes.Count(i.IsAssignableFrom) == 1).Select(@interface =>
 			(
 				Class: @class,
-				Interfaces: @class.GetInterfaces()
-					.Where(i => IsCodebaseAssembly(i.Assembly) && classes.Count(i.IsAssignableFrom) == 1)
-					.ToList()
-			)).Where(x => x.Interfaces.Any()).ToList();
+				Interface: @interface
+			))).ToLookup(x => x.Class, x => x.Interface);
 		}
 
 		/// <summary>

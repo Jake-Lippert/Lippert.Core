@@ -25,8 +25,21 @@ namespace Lippert.Core.Collections
 			/// </summary>
 			public new TValue this[TKey key]
 			{
-				get => TryGetValue(key, out var result) ? result : base[key] = _retrievalFunc(key);
+				get => base.TryGetValue(key, out var result) ? result : base[key] = _retrievalFunc(key);
 				set => base[key] = value;
+			}
+			public new bool TryGetValue(TKey key, out TValue value)
+			{
+				try
+				{
+					value = this[key];
+					return true;
+				}
+				catch
+				{
+					value = default!;
+					return false;
+				}
 			}
 
 			TValue IDictionary<TKey, TValue>.this[TKey key]
