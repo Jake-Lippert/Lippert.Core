@@ -10,6 +10,7 @@ namespace Lippert.Core.Tests.Reflection
 	[TestFixture]
 	public class PropertyAccessorTests
 	{
+		#region Get
 		[Test]
 		public void TestImplementingClass()
 		{
@@ -120,5 +121,32 @@ namespace Lippert.Core.Tests.Reflection
 		{
 			Assert.Throws<ArgumentException>(() => PropertyAccessor.Get<string>(x => x.ToString()));
 		}
+		#endregion
+
+
+		#region TryGet
+		[Test]
+		public void TestTryGetProperty()
+		{
+			//--Act
+			var success = PropertyAccessor.TryGet<Client>(x => x.CreatedByUserId, out var propertyInfo);
+
+			//--Assert
+			Assert.IsTrue(success);
+			Assert.AreEqual(typeof(Client), propertyInfo?.DeclaringType);
+			Assert.AreEqual(nameof(Client.CreatedByUserId), propertyInfo?.Name);
+		}
+
+		[Test]
+		public void TestTryGetPropertyUnsuccessfulForMethods()
+		{
+			//--Act
+			var success = PropertyAccessor.TryGet<Client>(x => x.ToString(), out var propertyInfo);
+
+			//--Assert
+			Assert.IsFalse(success);
+			Assert.IsNull(propertyInfo);
+		}
+		#endregion
 	}
 }

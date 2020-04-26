@@ -15,7 +15,7 @@ namespace Lippert.Core.Tests.Data
 	public class TableMapTests
 	{
 		[OneTimeSetUp]
-		public void OneTimeSetUp() => ReflectingRegistrationSource.CodebaseNamespacePrefix = "Lippert";
+		public void OneTimeSetUp() => ReflectingRegistrationSource.CodebaseNamespacePrefix = nameof(Lippert);
 
 		private void DisplayTableMapColumns<T>(TableMap<T> tableMap)
 		{

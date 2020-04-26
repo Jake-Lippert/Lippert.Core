@@ -93,6 +93,11 @@ namespace Lippert.Core.Data
 		public List<IColumnMap> InsertColumns => GetColumns(c => !c.IgnoreOperations.HasFlag(SqlOperation.Insert));
 
 		/// <summary>
+		/// Gets the columns that are available for insert or update operations
+		/// </summary>
+		public List<IColumnMap> UpsertColumns => GetColumns(c => !c.IgnoreOperations.HasFlag(SqlOperation.Insert | SqlOperation.Update));
+
+		/// <summary>
 		/// Gets the columns that are available for update operations
 		/// </summary>
 		public List<IColumnMap> UpdateColumns => GetColumns(c => !c.IgnoreOperations.HasFlag(SqlOperation.Update));

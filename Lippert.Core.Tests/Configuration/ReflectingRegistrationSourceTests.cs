@@ -12,7 +12,7 @@ namespace Lippert.Core.Tests.Configuration
 		public void TestGetsDependencies()
 		{
 			//--Arrange
-			ReflectingRegistrationSource.CodebaseNamespacePrefix = "Lippert";
+			ReflectingRegistrationSource.CodebaseNamespacePrefix = nameof(Lippert);
 
 			//--Act
 			var dependencies = ReflectingRegistrationSource.GetCodebaseDependencies()

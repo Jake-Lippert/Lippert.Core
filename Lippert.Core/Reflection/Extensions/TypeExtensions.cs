@@ -5,7 +5,8 @@ namespace Lippert.Core.Reflection.Extensions
 {
 	public static class TypeExtensions
 	{
-		public static bool IsAssignableTo<T>(this Type type) => typeof(T).IsAssignableFrom(type);
+		public static bool IsAssignableTo(this Type type, Type target) => target.IsAssignableFrom(type);
+		public static bool IsAssignableTo<T>(this Type type) => type.IsAssignableTo(typeof(T));
 
 		/// <summary>
 		/// Gets all of the types that make up the specified type
@@ -13,28 +14,29 @@ namespace Lippert.Core.Reflection.Extensions
 		/// <param name="seedType">The top-most type to deconstruct</param>
 		/// <param name="includeSeed">Should the top-most type be included in the results?</param>
 		/// <param name="includeInterfaces">Should interfaces be included in the results?</param>
-		public static IEnumerable<Type> GetBaseTypes(this Type seedType, bool includeSeed, bool includeInterfaces = false)
+		public static HashSet<Type> GetBaseTypes(this Type seedType, bool includeSeed, bool includeInterfaces = false)
 		{
+			var types = new HashSet<Type>();
+
 			if (seedType != typeof(object))
 			{
 				if (includeSeed)
 				{
-					yield return seedType;
+					types.Add(seedType);
 				}
 
-				foreach (var type in seedType.BaseType.GetBaseTypes(includeSeed, includeInterfaces))
+				if (seedType.BaseType is { } baseType)
 				{
-					yield return type;
+					types.UnionWith(baseType.GetBaseTypes(true, includeInterfaces));
 				}
 
 				if (includeInterfaces)
 				{
-					foreach (var type in seedType.GetInterfaces())
-					{
-						yield return type;
-					}
+					types.UnionWith(seedType.GetInterfaces());
 				}
 			}
+
+			return types;
 		}
 	}
 }

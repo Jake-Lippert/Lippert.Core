@@ -9,7 +9,7 @@
 		<PackageId>Lippert.Core</PackageId>
 		<Version>0.4.0</Version>
 		<Authors>Jake Lippert</Authors>
-		<Copyright>Jake Lippert 2019</Copyright>
+		<Copyright>Jake Lippert 2020</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/Jake-Lippert/Lippert.Core</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/Jake-Lippert/Lippert.Core</RepositoryUrl>
@@ -29,7 +29,8 @@
 - Enabling nullable reference types and treating warnings as errors
 - Adding a new TryGetValue to RetrievalDictionary in order to easily handle failures during retrieval
 - Adding more enumerable extensions
-- Converting GetCodebaseDependencies's return to be a lookup, as that makes more sense than the tuple list</PackageReleaseNotes>
+- Converting GetCodebaseDependencies's return to be a lookup, as that makes more sense than the tuple list
+- Splitting SqlServerQueryBuilder out into smaller components; adding sql merge builder for bulk record insert/update</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
@@ -39,5 +40,8 @@
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System.Configuration" />
 		<PackageReference Include="System.ValueTuple" Version="4.4.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
 	</ItemGroup>
 </Project>

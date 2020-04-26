@@ -10,14 +10,14 @@ namespace Lippert.Core.Data
 	{
 		public static ITableMap<T> GetTableMap<T>() => (ITableMap<T>)GetTableMap(typeof(T));
 
-		public static ITableMap GetTableMap(Type type) => GetTableMaps()
-			.Single(x => x.ModelType == type);
+		public static ITableMap GetTableMap(Type type) => TryGetTableMap(type, out var tableMap) ? tableMap : throw new InvalidOperationException($"No TableMap could be found for type '{type.FullName}'");
+		public static bool TryGetTableMap(Type type, out ITableMap tableMap) => GetTableMaps().TryGetValue(type, out tableMap);
 
-		public static List<ITableMap> GetTableMaps() =>
+		public static Dictionary<Type, ITableMap> GetTableMaps() =>
 			ReflectingRegistrationSource.GetCodebaseTypesAssignableTo<ITableMap>()
 				.Where(t => t.IsClass && !t.IsAbstract && !t.ContainsGenericParameters)
 				.Select(t => (ITableMap)Activator.CreateInstance(t))
-				.ToList();
+				.ToDictionary(x => x.ModelType);
 
 		public static List<ITableMapBuilder> GetTableMapBuilders<T>() => GetTableMapBuilders()
 			.Where(mb => mb.HandlesType<T>())

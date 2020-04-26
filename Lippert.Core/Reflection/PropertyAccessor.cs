@@ -15,22 +15,17 @@ namespace Lippert.Core.Reflection
 		/// </summary>
 		public static PropertyInfo Get<T, TProperty>(Expression<Func<T, TProperty>> selector)
 		{
-			if (selector is LambdaExpression lambda)
+			var memberExpression = ExtractMemberExpression(selector.Body);
+			if (memberExpression == null)
 			{
-				var memberExpression = ExtractMemberExpression(lambda.Body);
-				if (memberExpression == null)
-				{
-					throw new ArgumentException("Selector must be member access expression", nameof(selector));
-				}
-				if (memberExpression.Member.DeclaringType == default)
-				{
-					throw new InvalidOperationException("Property does not have declaring type");
-				}
-
-				return memberExpression.Member.DeclaringType.GetProperty(memberExpression.Member.Name);
+				throw new ArgumentException("Selector must be member access expression", nameof(selector));
+			}
+			if (memberExpression.Member.DeclaringType == default)
+			{
+				throw new InvalidOperationException("Property does not have declaring type");
 			}
 
-			throw new ArgumentException("Selector must be lambda expression", nameof(selector));
+			return memberExpression.Member.DeclaringType.GetProperty(memberExpression.Member.Name);
 
 			static MemberExpression? ExtractMemberExpression(Expression expression) => expression switch
 			{

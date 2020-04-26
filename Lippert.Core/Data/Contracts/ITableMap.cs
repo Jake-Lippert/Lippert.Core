@@ -33,6 +33,11 @@ namespace Lippert.Core.Data.Contracts
 		List<IColumnMap> InsertColumns { get; }
 
 		/// <summary>
+		/// Gets the columns that are available for insert or update operations
+		/// </summary>
+		List<IColumnMap> UpsertColumns { get; }
+
+		/// <summary>
 		/// Gets the columns that are available for update operations
 		/// </summary>
 		List<IColumnMap> UpdateColumns { get; }

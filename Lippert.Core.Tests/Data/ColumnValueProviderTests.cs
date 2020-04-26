@@ -15,7 +15,7 @@ namespace Lippert.Core.Tests.Data
 		private Guid _currentClientId, _currentUserId;
 		
 		[OneTimeSetUp]
-		public void OneTimeSetUp() => ReflectingRegistrationSource.CodebaseNamespacePrefix = "Lippert";
+		public void OneTimeSetUp() => ReflectingRegistrationSource.CodebaseNamespacePrefix = nameof(Lippert);
 
 		[SetUp]
 		public void SetUp()
