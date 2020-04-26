@@ -17,10 +17,10 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 		private string[] SplitQuery(string query) => query.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
 		[Test]
-		public void TestBuildsMerge([Values(true, false)] bool useJson, [Values(true, false)] bool includeInsert, [Values(true, false)] bool includeUpdate)
+		public void TestBuildsMerge([Values(true, false)] bool useJson, [Values(true, false)] bool includeInsert, [Values(true, false)] bool includeUpdate, [Values(true, false)] bool includeDelete)
 		{
 			//--Arrange
-			var mergeOperations = (includeInsert ? SqlOperation.Insert : 0) | (includeUpdate ? SqlOperation.Update : 0);
+			var mergeOperations = (includeInsert ? SqlOperation.Insert : 0) | (includeUpdate ? SqlOperation.Update : 0) | (includeDelete ? SqlOperation.Delete : 0);
 
 			//--Act/Assert
 			switch (mergeOperations)

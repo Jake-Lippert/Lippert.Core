@@ -19,7 +19,7 @@ namespace Lippert.Core.Data.QueryBuilders
 		/// Use sql merge to get all of the generated values back for all rows AND be able to map them to the correct objects
 		/// </summary>
 		/// <param name="converter">When this method returns, contains a <see cref="JsonConverter"/> that can be used to serialize collections into what's expected by the @serialized parameter</param>
-		/// <param name="mergeOperations">Should inserts/updates be included in the merge statement?</param>
+		/// <param name="mergeOperations">Should inserts/updates/deletes be included in the merge statement?</param>
 		/// <param name="tableMap">Optionally specify a table map to be used to build out the query</param>
 		/// <remarks>
 		/// Note: The OPENJSON function is available only under compatibility level 130 or higher.
@@ -43,7 +43,7 @@ namespace Lippert.Core.Data.QueryBuilders
 		/// Use sql merge to get all of the generated values back for all rows AND be able to map them to the correct objects
 		/// </summary>
 		/// <param name="aliases">When this method returns, contains a <see cref="Dictionary<PropertyInfo, string>"/> that can be used to help map collection item properties into what's expected by the @serialized parameter</param>
-		/// <param name="mergeOperations">Should inserts/updates be included in the merge statement?</param>
+		/// <param name="mergeOperations">Should inserts/updates/deletes be included in the merge statement?</param>
 		/// <param name="tableMap">Optionally specify a table map to be used to build out the query</param>
 		/// <param name="useJson">
 		/// Note: The OPENJSON function is available only under compatibility level 130 or higher.
@@ -71,13 +71,14 @@ namespace Lippert.Core.Data.QueryBuilders
 			var keyColumns = tableMap.KeyColumns;
 			var insertColumns = tableMap.InsertColumns;
 			var updateColumns = tableMap.UpdateColumns;
-			var (includeInsert, includeUpdate) = (mergeOperations.HasFlag(SqlOperation.Insert), mergeOperations.HasFlag(SqlOperation.Update));
-			var sourceColumns = (includeInsert, includeUpdate) switch
+			var (includeInsert, includeUpdate, includeDelete) = (mergeOperations.HasFlag(SqlOperation.Insert), mergeOperations.HasFlag(SqlOperation.Update), mergeOperations.HasFlag(SqlOperation.Delete));
+			var sourceColumns = (includeInsert, includeUpdate, includeDelete) switch
 			{
-				(true, false) => keyColumns.Union(insertColumns).ToList(),
-				(true, true) => keyColumns.Union(tableMap.UpsertColumns).ToList(),
-				(false, true) => keyColumns.Union(updateColumns).ToList(),
-				_ => throw new ArgumentException("At least one of insert or update must be included in the merge."),
+				(true, false, _) => keyColumns.Union(insertColumns).ToList(),
+				(true, true, _) => keyColumns.Union(tableMap.UpsertColumns).ToList(),
+				(false, true, _) => keyColumns.Union(updateColumns).ToList(),
+				(false, false, true) => keyColumns,
+				_ => throw new ArgumentException("At least one of insert, update, or delete must be included in the merge."),
 			};
 			var localAliases = aliases = BuildShortColumnNames(sourceColumns);//--Cannot use out parameter 'aliases' inside a lambda expression
 
@@ -102,6 +103,10 @@ namespace Lippert.Core.Data.QueryBuilders
 			{
 				merge.AppendLine("when matched then update set")
 					.AppendLine($"{string.Join($",{Environment.NewLine}", updateColumns.Select(c => BuildColumnIdentifier(c).With(ci => $"  target.{ci} = source.{ci}")))}");
+			}
+			if (includeDelete)
+			{
+				merge.AppendLine("when not matched by source then delete");
 			}
 
 			merge.Append($"output source.{CorrelationIndexIdentifier} as [{nameof(RecordMergeCorrelation.CorrelationIndex)}], $action as [{nameof(RecordMergeCorrelation.Action)}]{generatedOnInsert};");
