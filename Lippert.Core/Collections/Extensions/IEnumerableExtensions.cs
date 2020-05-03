@@ -145,6 +145,9 @@ namespace Lippert.Core.Collections.Extensions
 			return dataTable;
 		}
 
+		public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source) => source.ToHashSet(x => x);
+		public static HashSet<TSet> ToHashSet<TSource, TSet>(this IEnumerable<TSource> source, Func<TSource, TSet> selector) => new HashSet<TSet>(source.ToList().Select(selector));
+
 		public static MutableLookup<TKey, T> ToMutableLookup<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector) =>
 			source.ToMutableLookup(keySelector, x => x);
 		public static MutableLookup<TKey, TElement> ToMutableLookup<T, TKey, TElement>(this IEnumerable<T> source, Func<T, TKey> keySelector, Func<T, TElement> elementSelector) =>

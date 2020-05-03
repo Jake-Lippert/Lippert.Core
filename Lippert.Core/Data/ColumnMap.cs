@@ -8,7 +8,7 @@ namespace Lippert.Core.Data
 {
 	public class ColumnMap<T> : IColumnMap
 	{
-		internal ColumnMap(Expression<Func<T, object>> column)
+		internal ColumnMap(Expression<Func<T, object?>> column)
 			: this(PropertyAccessor.Get(column)) { }
 		internal ColumnMap(PropertyInfo property) => ColumnName = (Property = property).Name;
 

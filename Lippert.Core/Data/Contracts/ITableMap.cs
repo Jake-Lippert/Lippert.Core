@@ -78,16 +78,16 @@ namespace Lippert.Core.Data.Contracts
 		/// <summary>
 		/// Maps a column for the property with respect to the table map's class
 		/// </summary>
-		IColumnMap Map(Expression<Func<T, object>> column);
+		IColumnMap Map(Expression<Func<T, object?>> column);
 
 		/// <summary>
 		/// Gets the column map for the property with respect to the table map's class
 		/// </summary>
-		IColumnMap this[Expression<Func<T, object>> column] { get; }
+		IColumnMap this[Expression<Func<T, object?>> column] { get; }
 
 		/// <summary>
 		/// Maps the specified properties as basic columns
 		/// </summary>
-		void AutoMap(params Expression<Func<T, object>>[] includedColumns);
+		void AutoMap(params Expression<Func<T, object?>>[] includedColumns);
 	}
 }

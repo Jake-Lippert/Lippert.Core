@@ -9,7 +9,7 @@ namespace Lippert.Core.Data.QueryBuilders
 	public class SqlServerUpdateQueryBuilder : SqlServerQueryBuilder
 	{
 		public string Update<T>() => Update(new UpdateBuilder<T>());
-		public string Update<T>(params Expression<Func<T, object>>[] selectiveUpdateColumns) =>
+		public string Update<T>(params Expression<Func<T, object?>>[] selectiveUpdateColumns) =>
 			Update(selectiveUpdateColumns.Aggregate(new UpdateBuilder<T>(), (builder, column) => builder.Set(column)));
 		public string Update<T>(IUpdateBuilder<T> updateBuilder)
 		{

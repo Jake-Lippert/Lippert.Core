@@ -30,7 +30,10 @@
 - Adding a new TryGetValue to RetrievalDictionary in order to easily handle failures during retrieval
 - Adding more enumerable extensions
 - Converting GetCodebaseDependencies's return to be a lookup, as that makes more sense than the tuple list
-- Splitting SqlServerQueryBuilder out into smaller components; adding sql merge builder for bulk record insert/update</PackageReleaseNotes>
+- Splitting SqlServerQueryBuilder out into smaller components; adding sql merge builder for bulk record insert/update
+0.5.0
+- Adding a bi-directional, one-to-one dictionary for mapping between sets of values
+- Fixing nullability of column map expressions</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
