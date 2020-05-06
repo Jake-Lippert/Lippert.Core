@@ -19,14 +19,22 @@ namespace Lippert.Core.Data.QueryBuilders
 		}
 		void IValuedUpdateBuilder<T>.Set(System.Reflection.PropertyInfo column, object? value)
 		{
-			var columnMap = TableMap[column];
-			if (!TableMap.UpdateColumns.Contains(columnMap))
+			if (TableMap.TryGetColumnMap(column, out var columnMap) && columnMap is { })
 			{
-				throw new ArgumentException($"The column '{columnMap.ColumnName}' is not available for updates.", nameof(column));
+				if (TableMap.UpdateColumns.Contains(columnMap))
+				{
+					_setColumns.RemoveAll(cm => cm.Property == columnMap.Property);
+					_setColumns.Add(new ValuedColumnMap(columnMap, value));
+				}
+				else
+				{
+					throw new ArgumentException($"The column '{columnMap.ColumnName}' is not available for updates.", nameof(column));
+				}
 			}
-
-			_setColumns.RemoveAll(cm => cm.Property == columnMap.Property);
-			_setColumns.Add(new ValuedColumnMap(columnMap, value));
+			else
+			{
+				throw new ArgumentException($"The column '{column.Name}' is not available within the map for table '{TableMap.TableName}'.", nameof(column));
+			}
 		}
 
 		public ValuedUpdateBuilder<T> Key<TKey>(TKey key)

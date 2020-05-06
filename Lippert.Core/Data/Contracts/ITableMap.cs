@@ -63,6 +63,11 @@ namespace Lippert.Core.Data.Contracts
 		IColumnMap this[PropertyInfo property] { get; }
 
 		/// <summary>
+		/// Tries to get the column map for the property that applies to the table map's class, a subclass, or an interface
+		/// </summary>
+		bool TryGetColumnMap(PropertyInfo property, out IColumnMap? columnMap);
+
+		/// <summary>
 		/// Maps unmapped properties as basic columns
 		/// </summary>
 		void AutoMap();
@@ -84,6 +89,11 @@ namespace Lippert.Core.Data.Contracts
 		/// Gets the column map for the property with respect to the table map's class
 		/// </summary>
 		IColumnMap this[Expression<Func<T, object?>> column] { get; }
+
+		/// <summary>
+		/// Tries to get the column map for the property with respect to the table map's class
+		/// </summary>
+		bool TryGetColumnMap(Expression<Func<T, object?>> column, out IColumnMap? columnMap);
 
 		/// <summary>
 		/// Maps the specified properties as basic columns

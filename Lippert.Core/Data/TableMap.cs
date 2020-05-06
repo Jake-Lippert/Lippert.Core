@@ -183,6 +183,39 @@ namespace Lippert.Core.Data
 		/// </summary>
 		public IColumnMap this[PropertyInfo property] => TypeColumns[(property ?? throw new ArgumentNullException(nameof(property))).DeclaringType][property];
 
+		/// <summary>
+		/// Tries to get the column map for the property that applies to the table map's class, a subclass, or an interface
+		/// </summary>
+		public bool TryGetColumnMap(PropertyInfo property, out IColumnMap? columnMap)
+		{
+			try
+			{
+				columnMap = this[property];
+				return columnMap is { };
+			}
+			catch
+			{
+				columnMap = null;
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Tries to get the column map for the property with respect to the table map's class
+		/// </summary>
+		public bool TryGetColumnMap(Expression<Func<T, object?>> column, out IColumnMap? columnMap)
+		{
+			try
+			{
+				columnMap = this[column];
+				return columnMap is { };
+			}
+			catch
+			{
+				columnMap = null;
+				return false;
+			}
+		}
 
 		/// <summary>
 		/// Maps unmapped properties as basic columns

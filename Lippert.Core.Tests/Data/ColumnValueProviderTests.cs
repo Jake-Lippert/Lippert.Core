@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Linq;
 using Lippert.Core.Configuration;
 using Lippert.Core.Data;
-using Lippert.Core.Data.QueryBuilders;
-using Lippert.Core.Data.QueryBuilders.Contracts;
 using Lippert.Core.Tests.TestSchema;
 using NUnit.Framework;
 
@@ -71,29 +68,6 @@ namespace Lippert.Core.Tests.Data
 			Assert.AreEqual(_currentUserId, client.ModifiedByUserId);
 			Assert.LessOrEqual(now, client.ModifiedDateUtc);
 			Assert.GreaterOrEqual(now.AddSeconds(1), client.ModifiedDateUtc);
-		}
-
-		[Test]
-		public void TestApplyingUpdateBuilderValues()
-		{
-			//--Arrange
-			IValuedUpdateBuilder<Client> updateBuilder = new ValuedUpdateBuilder<Client>()
-				.Set(x => x.Name, "Inactive")
-				.Filter(c => c.IsActive, false);
-			var now = DateTime.UtcNow;
-
-			//--Act
-			ColumnValueProvider.ApplyUpdateBuilderValues(updateBuilder);
-
-			//--Assert
-			Assert.AreEqual(_currentUserId, updateBuilder.GetSetColumns()
-				.OfType<ValuedColumnMap>()
-				.Single(x => x.ColumnName == nameof(Client.ModifiedByUserId)).Value);
-			var modifiedDateUtc = (DateTime?)updateBuilder.GetSetColumns()
-				.OfType<ValuedColumnMap>()
-				.Single(x => x.ColumnName == nameof(Client.ModifiedDateUtc)).Value;
-			Assert.LessOrEqual(now, modifiedDateUtc);
-			Assert.GreaterOrEqual(now.AddSeconds(1), modifiedDateUtc);
 		}
 	}
 }
