@@ -7,7 +7,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageId>Lippert.Core</PackageId>
-		<Version>0.4.0</Version>
+		<Version>0.5.0</Version>
 		<Authors>Jake Lippert</Authors>
 		<Copyright>Jake Lippert 2020</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
