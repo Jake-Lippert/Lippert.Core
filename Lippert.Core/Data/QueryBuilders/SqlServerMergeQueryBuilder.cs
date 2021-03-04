@@ -4,10 +4,8 @@ using System.Linq;
 using System.Reflection;
 using Lippert.Core.Collections.Extensions;
 using Lippert.Core.Data.Contracts;
+using Lippert.Core.Data.QueryBuilders.MergeSerializers;
 using Lippert.Core.Extensions;
-using Lippert.Core.Reflection.Extensions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Lippert.Core.Data.QueryBuilders
 {
@@ -18,7 +16,7 @@ namespace Lippert.Core.Data.QueryBuilders
 		/// <summary>
 		/// Use sql merge to get all of the generated values back for all rows AND be able to map them to the correct objects
 		/// </summary>
-		/// <param name="converter">When this method returns, contains a <see cref="JsonConverter"/> that can be used to serialize collections into what's expected by the @serialized parameter</param>
+		/// <param name="mergeSerializer">When this method returns, contains a <see cref="Contracts.IMergeSerializer"/> that can be used to serialize collections into what's expected by the @serialized parameter</param>
 		/// <param name="mergeOperations">Should inserts/updates/deletes be included in the merge statement?</param>
 		/// <param name="tableMap">Optionally specify a table map to be used to build out the query</param>
 		/// <remarks>
@@ -27,36 +25,11 @@ namespace Lippert.Core.Data.QueryBuilders
 		/// </remarks>
 		/// <seealso cref="https://docs.microsoft.com/en-us/sql/t-sql/functions/openjson-transact-sql"/>
 		/// <returns>
-		/// Creates sql which expects a @serialized parameter whose value is a json array string.
-		/// The properties of the collection items are named _0 through _z, _10 through _zz, _100 through _zzz, and so-on.
-		/// A collection item property '_' is expected, which contains the index of the item within the array.
-		/// </returns>
-		public string Merge<T>(out JsonConverter converter, SqlOperation mergeOperations, ITableMap<T>? tableMap = null)
-		{
-			var sql = Merge(out var aliases, mergeOperations, tableMap, useJson: true);
-
-			converter = new JsonMergeConverter<T>(aliases);
-
-			return sql;
-		}
-		/// <summary>
-		/// Use sql merge to get all of the generated values back for all rows AND be able to map them to the correct objects
-		/// </summary>
-		/// <param name="aliases">When this method returns, contains a <see cref="Dictionary<PropertyInfo, string>"/> that can be used to help map collection item properties into what's expected by the @serialized parameter</param>
-		/// <param name="mergeOperations">Should inserts/updates/deletes be included in the merge statement?</param>
-		/// <param name="tableMap">Optionally specify a table map to be used to build out the query</param>
-		/// <param name="useJson">
-		/// Note: The OPENJSON function is available only under compatibility level 130 or higher.
-		/// If your database compatibility level is lower than 130, SQL Server can't find and run the OPENJSON function.
-		/// </param>
-		/// <seealso cref="https://docs.microsoft.com/en-us/sql/t-sql/functions/openxml-transact-sql"/>
-		/// <seealso cref="https://docs.microsoft.com/en-us/sql/t-sql/functions/openjson-transact-sql"/>
-		/// <returns>
 		/// Creates sql which expects a @serialized parameter whose value is a json or xml array string; if xml, the main and child nodes are named '_'.
 		/// The properties of the collection items are named _0 through _z, _10 through _zz, _100 through _zzz, and so-on.
 		/// A collection item property '_' is expected, which contains the index of the item within the array.
 		/// </returns>
-		public string Merge<T>(out Dictionary<PropertyInfo, string> aliases, SqlOperation mergeOperations, ITableMap<T>? tableMap = null, bool useJson = false)
+		public string Merge<T>(out Contracts.IMergeSerializer<T> mergeSerializer, SqlOperation mergeOperations, ITableMap<T>? tableMap = null, bool useJson = false)
 		{
 			var merge = new System.Text.StringBuilder();
 			if (!useJson)
@@ -80,11 +53,12 @@ namespace Lippert.Core.Data.QueryBuilders
 				(false, false, true) => keyColumns,
 				_ => throw new ArgumentException("At least one of insert, update, or delete must be included in the merge."),
 			};
-			var localAliases = aliases = BuildShortColumnNames(sourceColumns);//--Cannot use out parameter 'aliases' inside a lambda expression
+			var aliases = BuildShortColumnNames(sourceColumns);
+			mergeSerializer = useJson ? new JsonMergeSerializer<T>(aliases) : new XmlMergeSerializer<T>(aliases);
 
 			merge.AppendLine($"merge {BuildTableIdentifier(tableMap)} as target")
 				.AppendLine($"using (select * from open{(useJson ? "Json(@serialized)" : "Xml(@preparedDoc, '/_/_')")} with (")
-				.AppendLine($"  {BuildColumnParser(null, localAliases, useJson)},{string.Join(",", sourceColumns.Select(c => $"{Environment.NewLine}  {BuildColumnParser(c, localAliases, useJson)}"))}")
+				.AppendLine($"  {BuildColumnParser(null, aliases, useJson)},{string.Join(",", sourceColumns.Select(c => $"{Environment.NewLine}  {BuildColumnParser(c, aliases, useJson)}"))}")
 				.AppendLine($")) as source on ({string.Join(" and ", keyColumns.Select(c => BuildColumnIdentifier(c).With(ci => $"target.{ci} = source.{ci}")))})");
 
 			string? generatedOnInsert = null;
@@ -185,36 +159,6 @@ namespace Lippert.Core.Data.QueryBuilders
 		{
 			public int CorrelationIndex { get; set; }
 			public string Action { get; set; } = string.Empty;
-		}
-		internal class JsonMergeConverter<T> : JsonConverter
-		{
-			private readonly Dictionary<PropertyInfo, string> _aliases;
-
-			internal JsonMergeConverter(Dictionary<PropertyInfo, string> aliases) => _aliases = aliases;
-
-			public override bool CanConvert(Type objectType) => objectType.IsAssignableTo<IEnumerable<T>>();
-
-			public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
-			{
-				if (value is IEnumerable<T> typedValues)
-				{
-					var jArray = new JArray();
-					foreach (var (typedValue, index) in typedValues.Indexed())
-					{
-						var jObject = new JObject(new JProperty("_", index));
-						foreach (var (property, alias) in _aliases.AsTuples())
-						{
-							jObject.Add(new JProperty($"_{alias}", property.GetValue(typedValue)));
-						}
-						jArray.Add(jObject);
-					}
-
-					jArray.WriteTo(writer);
-				}
-			}
-
-			public override bool CanRead => false;
-			public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) => throw new NotImplementedException();
 		}
 	}
 }

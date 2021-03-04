@@ -7,9 +7,9 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageId>Lippert.Core</PackageId>
-		<Version>0.4.0</Version>
+		<Version>0.6.0</Version>
 		<Authors>Jake Lippert</Authors>
-		<Copyright>Jake Lippert 2020</Copyright>
+		<Copyright>Jake Lippert 2021</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/Jake-Lippert/Lippert.Core</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/Jake-Lippert/Lippert.Core</RepositoryUrl>
@@ -30,7 +30,14 @@
 - Adding a new TryGetValue to RetrievalDictionary in order to easily handle failures during retrieval
 - Adding more enumerable extensions
 - Converting GetCodebaseDependencies's return to be a lookup, as that makes more sense than the tuple list
-- Splitting SqlServerQueryBuilder out into smaller components; adding sql merge builder for bulk record insert/update</PackageReleaseNotes>
+- Splitting SqlServerQueryBuilder out into smaller components; adding sql merge builder for bulk record insert/update
+0.5.0
+- Adding a bi-directional, one-to-one dictionary for mapping between sets of values
+- Fixing nullability of column map expressions
+- Switching TableMapBuilder to set values on actual object references rather than building lists of columns and values
+0.6.0
+- Fixing merge record serialization of enums
+- Refactoring merge record serialization into testable classes implementing a shared interface</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">

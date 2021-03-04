@@ -129,7 +129,7 @@ namespace Lippert.Core.Data
 		/// <summary>
 		/// Maps a column for the property with respect to the table map's class
 		/// </summary>
-		public IColumnMap Map(Expression<Func<T, object>> column) => Map(new ColumnMap<T>(column ?? throw new ArgumentNullException(nameof(column))));
+		public IColumnMap Map(Expression<Func<T, object?>> column) => Map(new ColumnMap<T>(column ?? throw new ArgumentNullException(nameof(column))));
 
 		/// <summary>
 		/// Maps a column for the property with respect to the table map's class
@@ -176,13 +176,46 @@ namespace Lippert.Core.Data
 		/// <summary>
 		/// Gets the column map for the property with respect to the table map's class
 		/// </summary>
-		public IColumnMap this[Expression<Func<T, object>> column] => this[PropertyAccessor.Get(column ?? throw new ArgumentNullException(nameof(column)))];
+		public IColumnMap this[Expression<Func<T, object?>> column] => this[PropertyAccessor.Get(column ?? throw new ArgumentNullException(nameof(column)))];
 
 		/// <summary>
 		/// Gets the column map for the property that applies to the table map's class, a subclass, or an interface
 		/// </summary>
 		public IColumnMap this[PropertyInfo property] => TypeColumns[(property ?? throw new ArgumentNullException(nameof(property))).DeclaringType][property];
 
+		/// <summary>
+		/// Tries to get the column map for the property that applies to the table map's class, a subclass, or an interface
+		/// </summary>
+		public bool TryGetColumnMap(PropertyInfo property, out IColumnMap? columnMap)
+		{
+			try
+			{
+				columnMap = this[property];
+				return columnMap is { };
+			}
+			catch
+			{
+				columnMap = null;
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Tries to get the column map for the property with respect to the table map's class
+		/// </summary>
+		public bool TryGetColumnMap(Expression<Func<T, object?>> column, out IColumnMap? columnMap)
+		{
+			try
+			{
+				columnMap = this[column];
+				return columnMap is { };
+			}
+			catch
+			{
+				columnMap = null;
+				return false;
+			}
+		}
 
 		/// <summary>
 		/// Maps unmapped properties as basic columns
@@ -192,7 +225,7 @@ namespace Lippert.Core.Data
 		/// <summary>
 		/// Maps the specified properties as basic columns
 		/// </summary>
-		public void AutoMap(params Expression<Func<T, object>>[] includedColumns)
+		public void AutoMap(params Expression<Func<T, object?>>[] includedColumns)
 		{
 			foreach (var includedColumn in includedColumns)
 			{

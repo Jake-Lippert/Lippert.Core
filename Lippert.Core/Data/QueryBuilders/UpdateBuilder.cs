@@ -11,7 +11,7 @@ namespace Lippert.Core.Data.QueryBuilders
 	{
 		private readonly List<IColumnMap> _setColumns = new List<IColumnMap>();
 		
-		public UpdateBuilder<T> Set(Expression<Func<T, object>> column)
+		public UpdateBuilder<T> Set(Expression<Func<T, object?>> column)
 		{
 			var columnMap = TableMap[column ?? throw new ArgumentNullException(nameof(column))];
 			if (!TableMap.UpdateColumns.Contains(columnMap))
@@ -30,7 +30,7 @@ namespace Lippert.Core.Data.QueryBuilders
 			return this;
 		}
 
-		public new UpdateBuilder<T> Filter(Expression<Func<T, object>> column)
+		public new UpdateBuilder<T> Filter(Expression<Func<T, object?>> column)
 		{
 			base.Filter(column);
 			return this;

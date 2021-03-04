@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
 
 namespace Lippert.Core.Data.Contracts
 {
@@ -8,8 +6,11 @@ namespace Lippert.Core.Data.Contracts
 	{
 		Type ModelType { get; }
 		bool HandlesType<T>();
+	}
 
-		List<(PropertyInfo column, object? value)> GetInsertValues();
-		List<(PropertyInfo column, object? value)> GetUpdateValues();
+	public interface ITableMapBuilder<TComponent> : ITableMapBuilder
+	{
+		void SetInsertValues(TComponent component);
+		void SetUpdateValues(TComponent component);
 	}
 }

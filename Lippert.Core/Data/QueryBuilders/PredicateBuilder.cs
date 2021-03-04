@@ -19,7 +19,7 @@ namespace Lippert.Core.Data.QueryBuilders
 			_filterColumns.AddRange(TableMap.KeyColumns);
 			return this;
 		}
-		public PredicateBuilder<T> Filter(Expression<Func<T, object>> column)
+		public PredicateBuilder<T> Filter(Expression<Func<T, object?>> column)
 		{
 			_filterColumns.Add(TableMap[PropertyAccessor.Get(column ?? throw new ArgumentNullException(nameof(column)))]);
 			return this;

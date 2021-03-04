@@ -6,7 +6,7 @@ namespace Lippert.Core.Tests.TestSchema
 	{
 		public Guid IdA { get; set; }
 		public Guid IdB { get; set; }
-		public string? Property1 { get; set; }
+		public EnumState? Property1 { get; set; }
 		public string? Property2 { get; set; }
 		public string? Property3 { get; set; }
 		public string? Property4 { get; set; }

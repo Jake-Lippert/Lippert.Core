@@ -194,5 +194,17 @@ namespace Lippert.Core.Tests.Data
 
 			Assert.AreSame(clientUserMap.TypeColumns[typeof(IClientRecord)].Values.First(), clientUserMap.TypeColumns[typeof(ClientUser)].Values.First());
 		}
+
+		[Test]
+		public void TestThrowsExceptionWhenIncludingPropertiesAssignableToNonInheritedClass([Values(typeof(Employee), typeof(IGuidIdentifier), typeof(LargeRecord))] Type includePropertiesAssignableTo)
+		{
+			Assert.Throws<ArgumentException>(() => new UserMap(includePropertiesAssignableTo));
+		}
+
+		[Test]
+		public void TestThrowsExceptionWhenUsingInvalidTableName([Values(".12345", "%[*asdf", "Space Tab")] string tableName)
+		{
+			Assert.Throws<ArgumentException>(() => new UserMap(tableName));
+		}
 	}
 }

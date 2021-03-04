@@ -3,7 +3,6 @@ using Lippert.Core.Configuration;
 using Lippert.Core.Data;
 using Lippert.Core.Data.QueryBuilders;
 using Lippert.Core.Tests.TestSchema;
-using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Lippert.Core.Tests.Data.QueryBuilders
@@ -39,16 +38,17 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 		public void TestBuildsJsonConverterForUpdateMerge()
 		{
 			//--Act
-			var query = new SqlServerMergeQueryBuilder().Merge<LargeRecord>(out JsonConverter converter, SqlOperation.Update);
+			var query = new SqlServerMergeQueryBuilder().Merge<LargeRecord>(out var mergeSerializer, SqlOperation.Update, useJson: true);
 			var largeRecords = new[]
 			{
 				new LargeRecord
 				{
 					IdA = Guid.NewGuid(),
-					IdB = Guid.NewGuid()
+					IdB = Guid.NewGuid(),
+					Property1 = EnumState.ValueB
 				}
 			};
-			var serialized = JsonConvert.SerializeObject(largeRecords, converter);
+			var serialized = mergeSerializer.SerializeForMerge(largeRecords);
 
 			//--Assert
 			Console.WriteLine(serialized);
@@ -61,7 +61,7 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 "  [<{CorrelationIndex}>] int '$._',",
 "  [IdA] uniqueidentifier '$._0',",
 "  [IdB] uniqueidentifier '$._1',",
-"  [Property1] nvarchar(max) '$._2',",
+"  [Property1] smallint '$._2',",
 "  [Property2] nvarchar(max) '$._3',",
 "  [Property3] nvarchar(max) '$._4',",
 "  [Property4] nvarchar(max) '$._5',",
@@ -137,9 +137,7 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 "  target.[Property10] = source.[Property10]",
 "output source.[<{CorrelationIndex}>] as [CorrelationIndex], $action as [Action];"
 			}, queryLines);
-			Assert.AreEqual($"[{{\"_\":0,\"_0\":\"{largeRecords[0].IdA}\",\"_1\":\"{largeRecords[0].IdB}\",\"_2\":null,\"_3\":null,\"_4\":null,\"_5\":null,\"_6\":null,\"_7\":null,\"_8\":null,\"_9\":null,\"_a\":null,\"_b\":null,\"_c\":null,\"_d\":null,\"_e\":null,\"_f\":null,\"_g\":null,\"_h\":null,\"_i\":null,\"_j\":null,\"_k\":null,\"_l\":null,\"_m\":null,\"_n\":null,\"_o\":null,\"_p\":null,\"_q\":null,\"_r\":null,\"_s\":null,\"_t\":null,\"_u\":null,\"_v\":null,\"_w\":null,\"_x\":null,\"_y\":null,\"_z\":null,\"_10\":null,\"_11\":null}}]", serialized);
-
-			Assert.IsFalse(converter.CanRead);
+			Assert.AreEqual($"[{{\"_\":0,\"_0\":\"{largeRecords[0].IdA}\",\"_1\":\"{largeRecords[0].IdB}\",\"_2\":2,\"_3\":null,\"_4\":null,\"_5\":null,\"_6\":null,\"_7\":null,\"_8\":null,\"_9\":null,\"_a\":null,\"_b\":null,\"_c\":null,\"_d\":null,\"_e\":null,\"_f\":null,\"_g\":null,\"_h\":null,\"_i\":null,\"_j\":null,\"_k\":null,\"_l\":null,\"_m\":null,\"_n\":null,\"_o\":null,\"_p\":null,\"_q\":null,\"_r\":null,\"_s\":null,\"_t\":null,\"_u\":null,\"_v\":null,\"_w\":null,\"_x\":null,\"_y\":null,\"_z\":null,\"_10\":null,\"_11\":null}}]", serialized);
 		}
 	}
 }

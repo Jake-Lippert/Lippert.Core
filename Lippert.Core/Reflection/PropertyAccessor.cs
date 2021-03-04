@@ -9,7 +9,7 @@ namespace Lippert.Core.Reflection
 		/// <summary>
 		/// Get the property info for a property specified by an expression
 		/// </summary>
-		public static PropertyInfo Get<T>(Expression<Func<T, object>> selector) => Get<T, object>(selector);
+		public static PropertyInfo Get<T>(Expression<Func<T, object?>> selector) => Get<T, object?>(selector);
 		/// <summary>
 		/// Get the property info for a property specified by an expression
 		/// </summary>
@@ -38,7 +38,7 @@ namespace Lippert.Core.Reflection
 		/// <summary>
 		/// Get the property info for a property specified by an expression
 		/// </summary>
-		public static bool TryGet<T>(Expression<Func<T, object>> selector, out PropertyInfo? propertyInfo) => TryGet<T, object>(selector, out propertyInfo);
+		public static bool TryGet<T>(Expression<Func<T, object?>> selector, out PropertyInfo? propertyInfo) => TryGet<T, object?>(selector, out propertyInfo);
 		/// <summary>
 		/// Get the property info for a property specified by an expression
 		/// </summary>

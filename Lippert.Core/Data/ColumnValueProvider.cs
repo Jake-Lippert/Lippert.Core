@@ -19,10 +19,8 @@ namespace Lippert.Core.Data
 		{
 			foreach (var provider in _tableMapBuilders[typeof(TRecord)])
 			{
-				foreach (var (propertyInfo, value) in provider.GetInsertValues())
-				{
-					propertyInfo.SetValue(record, value);
-				}
+				var setInsertValues = typeof(ITableMapBuilder<>).MakeGenericType(provider.ModelType).GetMethod(nameof(ITableMapBuilder<object>.SetInsertValues));
+				setInsertValues.Invoke(provider, new object?[] { record });
 			}
 		}
 
@@ -30,21 +28,8 @@ namespace Lippert.Core.Data
 		{
 			foreach (var provider in _tableMapBuilders[typeof(TRecord)])
 			{
-				foreach (var (propertyInfo, value) in provider.GetUpdateValues())
-				{
-					propertyInfo.SetValue(record, value);
-				}
-			}
-		}
-
-		public static void ApplyUpdateBuilderValues<TRecord>(QueryBuilders.Contracts.IValuedUpdateBuilder<TRecord> updateBuilder)
-		{
-			foreach (var provider in _tableMapBuilders[typeof(TRecord)])
-			{
-				foreach (var (propertyInfo, value) in provider.GetUpdateValues())
-				{
-					updateBuilder.Set(propertyInfo, value);
-				}
+				var setUpdateValues = typeof(ITableMapBuilder<>).MakeGenericType(provider.ModelType).GetMethod(nameof(ITableMapBuilder<object>.SetUpdateValues));
+				setUpdateValues.Invoke(provider, new object?[] { record });
 			}
 		}
 	}
