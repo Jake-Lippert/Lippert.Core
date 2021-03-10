@@ -7,7 +7,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageId>Lippert.Core</PackageId>
-		<Version>0.6.0</Version>
+		<Version>0.7.0</Version>
 		<Authors>Jake Lippert</Authors>
 		<Copyright>Jake Lippert 2021</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -37,7 +37,9 @@
 - Switching TableMapBuilder to set values on actual object references rather than building lists of columns and values
 0.6.0
 - Fixing merge record serialization of enums
-- Refactoring merge record serialization into testable classes implementing a shared interface</PackageReleaseNotes>
+- Refactoring merge record serialization into testable classes implementing a shared interface
+0.7.0
+- Adding ability to delete records as part of a merge statement; filters can be specified to limit deletions</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
