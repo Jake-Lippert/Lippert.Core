@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Lippert.Core.Collections.Extensions;
 using Lippert.Core.Data.Contracts;
 using Lippert.Core.Data.QueryBuilders.MergeSerializers;
@@ -9,6 +8,9 @@ using Lippert.Core.Extensions;
 
 namespace Lippert.Core.Data.QueryBuilders
 {
+	/// <summary>
+	/// Builds sql server merge queries
+	/// </summary>
 	public class SqlServerMergeQueryBuilder : SqlServerQueryBuilder
 	{
 		public static string CorrelationIndexIdentifier = BuildIdentifier($"<{{{nameof(RecordMergeCorrelation.CorrelationIndex)}}}>");
@@ -17,7 +19,7 @@ namespace Lippert.Core.Data.QueryBuilders
 		/// Use sql merge to get all of the generated values back for all rows AND be able to map them to the correct objects
 		/// </summary>
 		/// <param name="mergeSerializer">When this method returns, contains a <see cref="Contracts.IMergeSerializer"/> that can be used to serialize collections into what's expected by the @serialized parameter</param>
-		/// <param name="mergeOperations">Should inserts/updates/deletes be included in the merge statement?</param>
+		/// <param name="mergeDefinition">Should inserts/updates/deletes be included in the merge statement?  Should there be additional filtering?</param>
 		/// <param name="tableMap">Optionally specify a table map to be used to build out the query</param>
 		/// <remarks>
 		/// Note: The OPENJSON function is available only under compatibility level 130 or higher.
@@ -29,135 +31,155 @@ namespace Lippert.Core.Data.QueryBuilders
 		/// The properties of the collection items are named _0 through _z, _10 through _zz, _100 through _zzz, and so-on.
 		/// A collection item property '_' is expected, which contains the index of the item within the array.
 		/// </returns>
-		public string Merge<T>(out Contracts.IMergeSerializer<T> mergeSerializer, SqlOperation mergeOperations, ITableMap<T>? tableMap = null, bool useJson = false)
+		public string Merge<T>(out Contracts.IMergeSerializer<T> mergeSerializer, MergeDefinition<T> mergeDefinition, ITableMap<T>? tableMap = null, bool useJson = false)
 		{
-			var merge = new System.Text.StringBuilder();
-			if (!useJson)
-			{
-				//--Create an internal representation of the XML document
-				merge.AppendLine("declare @preparedDoc int;")
-					.AppendLine("exec sp_xml_preparedocument @preparedDoc output, @serialized;")
-					.AppendLine();
-			}
-
+			//--Build a table map and figure out which columns should be serialized
 			tableMap ??= GetTableMap<T>();
-			var keyColumns = tableMap.KeyColumns;
-			var insertColumns = tableMap.InsertColumns;
-			var updateColumns = tableMap.UpdateColumns;
-			var (includeInsert, includeUpdate, includeDelete) = (mergeOperations.HasFlag(SqlOperation.Insert), mergeOperations.HasFlag(SqlOperation.Update), mergeOperations.HasFlag(SqlOperation.Delete));
-			var sourceColumns = (includeInsert, includeUpdate, includeDelete) switch
-			{
-				(true, false, _) => keyColumns.Union(insertColumns).ToList(),
-				(true, true, _) => keyColumns.Union(tableMap.UpsertColumns).ToList(),
-				(false, true, _) => keyColumns.Union(updateColumns).ToList(),
-				(false, false, true) => keyColumns,
-				_ => throw new ArgumentException("At least one of insert, update, or delete must be included in the merge."),
-			};
-			var aliases = BuildShortColumnNames(sourceColumns);
-			mergeSerializer = useJson ? new JsonMergeSerializer<T>(aliases) : new XmlMergeSerializer<T>(aliases);
 
-			merge.AppendLine($"merge {BuildTableIdentifier(tableMap)} as target")
-				.AppendLine($"using (select * from open{(useJson ? "Json(@serialized)" : "Xml(@preparedDoc, '/_/_')")} with (")
-				.AppendLine($"  {BuildColumnParser(null, aliases, useJson)},{string.Join(",", sourceColumns.Select(c => $"{Environment.NewLine}  {BuildColumnParser(c, aliases, useJson)}"))}")
-				.AppendLine($")) as source on ({string.Join(" and ", keyColumns.Select(c => BuildColumnIdentifier(c).With(ci => $"target.{ci} = source.{ci}")))})");
+			//--Build a merge serializer and the core of the merge statement
+			mergeSerializer = useJson ? new JsonMergeSerializer<T>(tableMap) : new XmlMergeSerializer<T>(tableMap);
+			var merge = new System.Text.StringBuilder();
+			merge.AppendLines(BuildCoreMergeLines(mergeSerializer, mergeDefinition, tableMap));
 
-			string? generatedOnInsert = null;
-			if (includeInsert)
-			{
-				merge.AppendLine($"when not matched by target then insert({string.Join(", ", insertColumns.Select(BuildColumnIdentifier))})")
-					.AppendLine($"  values({string.Join(", ", insertColumns.Select(c => $"source.{BuildColumnIdentifier(c)}"))})");
+			//--Build the components of the merge
+			merge.AppendLines(BuildInsertLines(mergeDefinition, tableMap));
+			merge.AppendLines(BuildUpdateLines(mergeDefinition, tableMap));
+			merge.AppendLines(BuildDeleteLines(mergeDefinition));
 
-				var generatedColumns = tableMap.GeneratedColumns;
-				if (generatedColumns.Any())
-				{
-					generatedOnInsert = $", null as {BuildIdentifier(SplitOn)}, {string.Join(", ", generatedColumns.Select(c => $"inserted.{BuildColumnIdentifier(c)}"))}";
-				}
-			}
-			if (includeUpdate)
-			{
-				merge.AppendLine("when matched then update set")
-					.AppendLine($"{string.Join($",{Environment.NewLine}", updateColumns.Select(c => BuildColumnIdentifier(c).With(ci => $"  target.{ci} = source.{ci}")))}");
-			}
-			if (includeDelete)
-			{
-				merge.AppendLine("when not matched by source then delete");
-			}
-
-			merge.Append($"output source.{CorrelationIndexIdentifier} as [{nameof(RecordMergeCorrelation.CorrelationIndex)}], $action as [{nameof(RecordMergeCorrelation.Action)}]{generatedOnInsert};");
+			//--Build the merge's output statement so we can determine which records were inserted/updated/deleted
+			merge.Append($"output {string.Join(", ", BuildOutputColumns(mergeDefinition, tableMap))};");
 
 			return merge.ToString();
+		}
 
-			/// <summary>'Minify' column names to help make xml and json shorter</summary>
-			static Dictionary<PropertyInfo, string> BuildShortColumnNames(List<IColumnMap> insertColumns)
+		/// <summary>
+		/// Build the core lines for the merge statement
+		/// </summary>
+		public IEnumerable<string> BuildCoreMergeLines<T>(Contracts.IMergeSerializer<T> mergeSerializer, MergeDefinition<T> mergeDefinition, ITableMap<T> tableMap)
+		{
+			if (mergeSerializer is XmlMergeSerializer<T>)
 			{
-				return insertColumns.Select((c, i) => (column: c, index: i))
-					.ToDictionary(x => x.column.Property, x => BuildShortColumnName(x.index));
-
-				static string BuildShortColumnName(int index)
-				{
-					return new string(BuildAlias(index).Reverse().ToArray());
-					//--Enumerates remainders from least significant to most in order to convert from base-10 to base-36
-					static IEnumerable<char> BuildAlias(int i)
-					{
-						yield return (char)(i % 36).With(r => r < 10 ? '0' + r : 'a' + (r - 10));
-						if (i >= 36)
-						{
-							foreach (var a in BuildAlias(i / 36))
-							{
-								yield return a;
-							}
-						}
-					}
-				}
+				//--Create an internal representation of the XML document
+				yield return "declare @preparedDoc int;";
+				yield return "exec sp_xml_preparedocument @preparedDoc output, @serialized;";
+				yield return "";
 			}
-			/// <summary>Build the sql that's needed for each column defined by the openXml or openJson with(...) clause</summary>
-			static string BuildColumnParser(IColumnMap? columnMap, Dictionary<PropertyInfo, string> aliases, bool useJson)
+
+			//--merge [Table] as target
+			//	using (......) as source on (target.[Key] = source.[Key])
+			yield return $"merge {BuildTableIdentifier(mergeSerializer.TableMap)} as target";
+			yield return @$"using (select * from open{mergeSerializer switch
 			{
-				if (columnMap is IColumnMap column)
+				JsonMergeSerializer<T> _ => "Json(@serialized)",
+				XmlMergeSerializer<T> _ => "Xml(@preparedDoc, '/_/_')",
+				_ => throw new ArgumentException($"No data serialization defined for merge serializer type '{mergeSerializer.GetType().FullName}'.")
+			}} with (";
+			yield return string.Join($",{Environment.NewLine}", BuildColumnParsers());
+			yield return $")) as source on ({string.Join(" and ", BuildJoinConditions())})";
+
+			IEnumerable<string> BuildColumnParsers()
+			{
+				yield return FormatColumnParser(null);
+
+				var sourceColumns = (mergeDefinition.IncludeInsert, mergeDefinition.IncludeUpdate, mergeDefinition.IncludeDelete) switch
 				{
-					return Format(BuildColumnIdentifier(column), column.Property.PropertyType, aliases[column.Property]);
+					(true, false, _) => tableMap.KeyColumns.Union(tableMap.InsertColumns).ToList(),
+					(true, true, _) => tableMap.KeyColumns.Union(tableMap.UpsertColumns).ToList(),
+					(false, true, _) => tableMap.KeyColumns.Union(tableMap.UpdateColumns).ToList(),
+					(false, false, true) => tableMap.KeyColumns,
+					_ => throw new ArgumentException("At least one of insert, update, or delete must be included in the merge."),
+				};
+				foreach (var sourceColumn in sourceColumns)
+				{
+					yield return FormatColumnParser(sourceColumn);
 				}
 
-				return Format(CorrelationIndexIdentifier, typeof(int), null);
-
-				string Format(string columnIdentifier, Type type, string? alias) => $"{columnIdentifier} {GetSqlType(type)} '{(useJson ? "$." : "@")}_{alias}'";
-
-				static string GetSqlType(Type type)
+				string FormatColumnParser(IColumnMap? columnMap) => $"  {mergeSerializer.BuildColumnParser(columnMap)}";
+			}
+			IEnumerable<string> BuildJoinConditions()
+			{
+				foreach (var keyColumn in mergeSerializer.TableMap.KeyColumns)
 				{
-					if (type.IsEnum)
-					{
-						return GetSqlType(Enum.GetUnderlyingType(type));
-					}
-					if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-					{
-						return GetSqlType(Nullable.GetUnderlyingType(type));
-					}
-
-					return sqlTypeLookup[type];
+					var columnIdentifier = BuildColumnIdentifier(keyColumn);
+					yield return $"target.{columnIdentifier} = source.{columnIdentifier}";
 				}
 			}
 		}
-
-		protected static readonly Dictionary<Type, string> sqlTypeLookup = new Dictionary<Type, string>
+		/// <summary>
+		/// Build the insert lines for the merge statement
+		/// </summary>
+		/// <remarks>
+		/// Yields no lines if the merge definition doesn't have inserts included
+		/// </remarks>
+		public IEnumerable<string> BuildInsertLines<T>(MergeDefinition<T> mergeDefinition, ITableMap<T> tableMap)
 		{
-			[typeof(Guid)] = "uniqueidentifier",
-			[typeof(bool)] = "bit",
-			[typeof(byte)] = "tinyint",
-			[typeof(char)] = "nvarchar",
-			[typeof(DateTime)] = "datetime",
-			[typeof(decimal)] = "decimal",
-			[typeof(double)] = "float",
-			[typeof(short)] = "smallint",
-			[typeof(int)] = "int",
-			[typeof(long)] = "bigint",
-			[typeof(float)] = "float",
-			[typeof(string)] = "nvarchar(max)"
-		};
+			if (mergeDefinition.IncludeInsert)
+			{
+				var insertColumns = tableMap.InsertColumns;
+				yield return $"when not matched by target then insert({string.Join(", ", BuildInsertColumns())})";
+				yield return $"  values({string.Join(", ", BuildInsertValueColumns())})";
+
+				IEnumerable<string> BuildInsertColumns() => insertColumns.Select(c => BuildColumnIdentifier(c));
+				IEnumerable<string> BuildInsertValueColumns() => insertColumns.Select(c => $"source.{BuildColumnIdentifier(c)}");
+			}
+		}
+		/// <summary>
+		/// Build the update lines for the merge statement
+		/// </summary>
+		/// <remarks>
+		/// Yields no lines if the merge definition doesn't have updates included
+		/// </remarks>
+		public IEnumerable<string> BuildUpdateLines<T>(MergeDefinition<T> mergeDefinition, ITableMap<T> tableMap)
+		{
+			if (mergeDefinition.IncludeUpdate)
+			{
+				yield return "when matched then update set";
+				yield return $"{string.Join($",{Environment.NewLine}", BuildUpdateValueAssignments())}";
+			}
+
+			IEnumerable<string> BuildUpdateValueAssignments() => tableMap.UpdateColumns.Select(c => BuildColumnIdentifier(c).With(ci => $"  target.{ci} = source.{ci}"));
+		}
+		/// <summary>
+		/// Build the delete lines for the merge statement
+		/// </summary>
+		/// <remarks>
+		/// Yields no lines if the merge definition doesn't have deletes included
+		/// </remarks>
+		public IEnumerable<string> BuildDeleteLines<T>(MergeDefinition<T> mergeDefinition)
+		{
+			if (mergeDefinition.IncludeDelete)
+			{
+				yield return $"when not matched by source{string.Join("", mergeDefinition.GetDeleteFilterColumns().Select((dc, i) => $" and target.{BuildColumnIdentifier(dc)} = @deleteFilter{i}"))} then delete";
+			}
+		}
+		/// <summary>
+		/// Build the output columns for the merge statement
+		/// </summary>
+		public IEnumerable<string> BuildOutputColumns<T>(MergeDefinition<T> mergeDefinition, ITableMap<T> tableMap)
+		{
+			yield return $@"{(mergeDefinition.IncludeInsert, mergeDefinition.IncludeUpdate, mergeDefinition.IncludeDelete) switch
+			{
+				(false, false, true) => "null",//--If this is a Delete-only merge statement 'source' won't be able to be bound, so just use null
+				_ => $"source.{CorrelationIndexIdentifier}"
+			}} as [{nameof(RecordMergeCorrelation.CorrelationIndex)}]";
+			yield return $"$action as [{nameof(RecordMergeCorrelation.Action)}]";
+			yield return $"null as {BuildIdentifier(SplitOn)}";
+
+			foreach (var columnIdentifier in tableMap.InstanceColumns.Values.Select(BuildColumnIdentifier))
+			{
+				yield return (mergeDefinition.IncludeInsert, mergeDefinition.IncludeUpdate, mergeDefinition.IncludeDelete) switch
+				{
+					(false, false, true) => $"deleted.{columnIdentifier}",
+					(_, _, true) => $"coalesce(inserted.{columnIdentifier}, deleted.{columnIdentifier}) as {columnIdentifier}",
+					(_, _, false) => $"inserted.{columnIdentifier}"
+				};
+			}
+		}
 
 
 		public class RecordMergeCorrelation
 		{
-			public int CorrelationIndex { get; set; }
+			public int? CorrelationIndex { get; set; }
 			public string Action { get; set; } = string.Empty;
 		}
 	}

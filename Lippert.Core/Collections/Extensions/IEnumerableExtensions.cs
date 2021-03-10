@@ -145,6 +145,12 @@ namespace Lippert.Core.Collections.Extensions
 			return dataTable;
 		}
 
+		/// <summary>
+		/// Creates a <see cref="Dictionary{TKey, TValue}"/> from an <see cref="IEnumerable{T}"/> according to specified key selector and element selector functions that provide element indices.
+		/// </summary>
+		public static Dictionary<TKey, TValue> ToDictionary<T, TKey, TValue>(this IEnumerable<T> source, Func<T, int, TKey> keySelector, Func<T, int, TValue> valueSelector) =>
+			source.Indexed().ToDictionary(x => keySelector(x.item, x.index), x => valueSelector(x.item, x.index));
+
 		public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source) => source.ToHashSet(x => x);
 		public static HashSet<TSet> ToHashSet<TSource, TSet>(this IEnumerable<TSource> source, Func<TSource, TSet> selector) => new HashSet<TSet>(source.ToList().Select(selector));
 

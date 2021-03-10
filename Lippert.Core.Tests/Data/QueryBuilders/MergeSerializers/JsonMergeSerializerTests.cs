@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using Lippert.Core.Data.QueryBuilders.MergeSerializers;
 using Lippert.Core.Tests.TestSchema;
+using Lippert.Core.Tests.TestSchema.TableMaps;
 using NUnit.Framework;
 
 namespace Lippert.Core.Tests.Data.QueryBuilders.MergeSerializers
@@ -30,15 +30,10 @@ namespace Lippert.Core.Tests.Data.QueryBuilders.MergeSerializers
 					SomeAwesomeFieldB = "Name B"
 				}
 			};
-			var aliases = new Dictionary<System.Reflection.PropertyInfo, string>
-			{
-				[typeof(SuperEmployee).GetProperty(nameof(SuperEmployee.EmployeeId))] = "0",
-				[typeof(SuperEmployee).GetProperty(nameof(SuperEmployee.SomeAwesomeFieldA))] = "1",
-				[typeof(SuperEmployee).GetProperty(nameof(SuperEmployee.SomeAwesomeFieldB))] = "2"
-			};
+			var tableMap = new SuperEmployeeMap();
 
 			//--Act
-			var serialized = new JsonMergeSerializer<SuperEmployee>(aliases).SerializeForMerge(records);
+			var serialized = new JsonMergeSerializer<SuperEmployee>(tableMap).SerializeForMerge(records);
 
 			//--Assert
 			Assert.AreEqual($"[{{\"_\":0,\"_0\":\"{idA}\",\"_1\":\"Name A\",\"_2\":null}},{{\"_\":1,\"_0\":\"{idB}\",\"_1\":null,\"_2\":\"Name B\"}}]", serialized);

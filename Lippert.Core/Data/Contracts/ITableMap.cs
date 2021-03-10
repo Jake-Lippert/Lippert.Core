@@ -5,6 +5,9 @@ using System.Reflection;
 
 namespace Lippert.Core.Data.Contracts
 {
+	/// <summary>
+	/// Contracts for the core functionality of mapping types to tables
+	/// </summary>
 	public interface ITableMap
 	{
 		/// <summary>
@@ -78,6 +81,9 @@ namespace Lippert.Core.Data.Contracts
 		/// <param name="configureColumn"></param>
 		void AutoMap(Action<Type, IColumnMap> configureColumn);
 	}
+	/// <summary>
+	/// Contracts for mapping types to tables
+	/// </summary>
 	public interface ITableMap<T> : ITableMap
 	{
 		/// <summary>

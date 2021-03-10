@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Linq;
 using Lippert.Core.Configuration;
-using Lippert.Core.Data;
 using Lippert.Core.Data.QueryBuilders;
 using Lippert.Core.Tests.TestSchema;
 using NUnit.Framework;
@@ -19,16 +19,28 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 		public void TestBuildsMerge([Values(true, false)] bool useJson, [Values(true, false)] bool includeInsert, [Values(true, false)] bool includeUpdate, [Values(true, false)] bool includeDelete)
 		{
 			//--Arrange
-			var mergeOperations = (includeInsert ? SqlOperation.Insert : 0) | (includeUpdate ? SqlOperation.Update : 0) | (includeDelete ? SqlOperation.Delete : 0);
+			var mergeDefinition = new MergeDefinition<Client>();
+			if (includeInsert)
+			{
+				mergeDefinition.Insert();
+			}
+			if (includeUpdate)
+			{
+				mergeDefinition.Update();
+			}
+			if (includeDelete)
+			{
+				mergeDefinition.Delete();
+			}
 
 			//--Act/Assert
-			switch (mergeOperations)
+			switch ((mergeDefinition.IncludeInsert, mergeDefinition.IncludeUpdate, mergeDefinition.IncludeDelete))
 			{
-				case SqlOperation.None:
-					Assert.Throws<ArgumentException>(() => new SqlServerMergeQueryBuilder().Merge<Client>(out var aliases, mergeOperations, useJson: useJson));
+				case (false, false, false):
+					Assert.Throws<ArgumentException>(() => new SqlServerMergeQueryBuilder().Merge(out var aliases, mergeDefinition, useJson: useJson));
 					break;
 				default:
-					var query = new SqlServerMergeQueryBuilder().Merge<Client>(out var aliases, mergeOperations, useJson: useJson);
+					var query = new SqlServerMergeQueryBuilder().Merge(out var aliases, mergeDefinition, useJson: useJson);
 					Console.WriteLine(query);
 					break;
 			}
@@ -37,8 +49,11 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 		[Test]
 		public void TestBuildsJsonConverterForUpdateMerge()
 		{
+			//--Arrange
+			var mergeDefinition = new MergeDefinition<LargeRecord>().Update();
+
 			//--Act
-			var query = new SqlServerMergeQueryBuilder().Merge<LargeRecord>(out var mergeSerializer, SqlOperation.Update, useJson: true);
+			var query = new SqlServerMergeQueryBuilder().Merge(out var mergeSerializer, mergeDefinition, useJson: true);
 			var largeRecords = new[]
 			{
 				new LargeRecord
@@ -135,9 +150,41 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 "  target.[PropertyY] = source.[PropertyY],",
 "  target.[PropertyZ] = source.[PropertyZ],",
 "  target.[Property10] = source.[Property10]",
-"output source.[<{CorrelationIndex}>] as [CorrelationIndex], $action as [Action];"
+"output source.[<{CorrelationIndex}>] as [CorrelationIndex], $action as [Action], null as [<{Split}>], inserted.[IdA], inserted.[IdB], inserted.[Property1], inserted.[Property2], inserted.[Property3], inserted.[Property4], inserted.[Property5], inserted.[Property6], inserted.[Property7], inserted.[Property8], inserted.[Property9], inserted.[PropertyA], inserted.[PropertyB], inserted.[PropertyC], inserted.[PropertyD], inserted.[PropertyE], inserted.[PropertyF], inserted.[PropertyG], inserted.[PropertyH], inserted.[PropertyI], inserted.[PropertyJ], inserted.[PropertyK], inserted.[PropertyL], inserted.[PropertyM], inserted.[PropertyN], inserted.[PropertyO], inserted.[PropertyP], inserted.[PropertyQ], inserted.[PropertyR], inserted.[PropertyS], inserted.[PropertyT], inserted.[PropertyU], inserted.[PropertyV], inserted.[PropertyW], inserted.[PropertyX], inserted.[PropertyY], inserted.[PropertyZ], inserted.[Property10];"
 			}, queryLines);
 			Assert.AreEqual($"[{{\"_\":0,\"_0\":\"{largeRecords[0].IdA}\",\"_1\":\"{largeRecords[0].IdB}\",\"_2\":2,\"_3\":null,\"_4\":null,\"_5\":null,\"_6\":null,\"_7\":null,\"_8\":null,\"_9\":null,\"_a\":null,\"_b\":null,\"_c\":null,\"_d\":null,\"_e\":null,\"_f\":null,\"_g\":null,\"_h\":null,\"_i\":null,\"_j\":null,\"_k\":null,\"_l\":null,\"_m\":null,\"_n\":null,\"_o\":null,\"_p\":null,\"_q\":null,\"_r\":null,\"_s\":null,\"_t\":null,\"_u\":null,\"_v\":null,\"_w\":null,\"_x\":null,\"_y\":null,\"_z\":null,\"_10\":null,\"_11\":null}}]", serialized);
+		}
+
+		[Test]
+		public void TestBuildsDeleteLineForBasicDelete()
+		{
+			//--Arrange
+			var mergeDefinition = new MergeDefinition<SuperEmployee>().Delete();
+
+			//--Act
+			var deleteLines = new SqlServerMergeQueryBuilder().BuildDeleteLines(mergeDefinition).ToList();
+
+			//--Assert
+			Assert.AreEqual(1, deleteLines.Count);
+			Assert.AreEqual("when not matched by source then delete", deleteLines.Single());
+		}
+
+		[Test]
+		public void TestBuildsDeleteLinesForFilteredDelete()
+		{
+			//--Arrange
+			var mergeDefinition = new MergeDefinition<SuperEmployee>().Delete(x => x.Filter(se => se.SomeAwesomeFieldA, "Stuff").Filter(se => se.SomeAwesomeFieldB, null));
+
+			//--Act
+			var deleteLines = new SqlServerMergeQueryBuilder().BuildDeleteLines(mergeDefinition).ToList();
+			foreach (var line in deleteLines)
+			{
+				Console.WriteLine(line);
+			}
+
+			//--Assert
+			Assert.AreEqual(1, deleteLines.Count);
+			Assert.AreEqual("when not matched by source and target.[SomeAwesomeFieldA] = @deleteFilter0 and target.[SomeAwesomeFieldB] = @deleteFilter1 then delete", deleteLines.Single());
 		}
 	}
 }
