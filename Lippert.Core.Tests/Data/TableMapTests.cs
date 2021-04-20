@@ -108,6 +108,7 @@ namespace Lippert.Core.Tests.Data
 			Assert.AreEqual("Category", category.ColumnName);
 			Assert.AreEqual(ColumnBehavior.Basic, category.Behavior);
 			Assert.AreEqual((SqlOperation)0, category.IgnoreOperations);
+			Assert.AreEqual(int.MaxValue, category.Length);
 
 			var cost = inheritingComponentMap[x => x.Cost];
 			Assert.AreEqual("Cost", cost.ColumnName);
@@ -205,6 +206,19 @@ namespace Lippert.Core.Tests.Data
 		public void TestThrowsExceptionWhenUsingInvalidTableName([Values(".12345", "%[*asdf", "Space Tab")] string tableName)
 		{
 			Assert.Throws<ArgumentException>(() => new UserMap(tableName));
+		}
+
+		[Test]
+		public void TestConfiguresStringColumnLength()
+		{
+			//--Act
+			var purchaseMap = new PurchaseMap();
+			DisplayTableMapColumns(purchaseMap);
+
+			//--Assert
+			Assert.AreEqual(20, purchaseMap[x => x.Name].Length);
+			Assert.AreEqual(10, purchaseMap[x => x.Cost].Precision);
+			Assert.AreEqual(2, purchaseMap[x => x.Cost].Scale);
 		}
 	}
 }

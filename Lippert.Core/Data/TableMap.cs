@@ -130,18 +130,40 @@ namespace Lippert.Core.Data
 		/// Maps a column for the property with respect to the table map's class
 		/// </summary>
 		public IColumnMap Map(Expression<Func<T, object?>> column) => Map(new ColumnMap<T>(column ?? throw new ArgumentNullException(nameof(column))));
+		/// <summary>
+		/// Maps a column for the property with respect to the table map's class
+		/// </summary>
+		public IColumnMap Map(Expression<Func<T, string?>> column, int length) => Map(new ColumnMap<T>(column ?? throw new ArgumentNullException(nameof(column)), length));
+		/// <summary>
+		/// Maps a column for the property with respect to the table map's class
+		/// </summary>
+		public IColumnMap Map(Expression<Func<T, decimal?>> column, int precision, int scale) => Map(new ColumnMap<T>(column ?? throw new ArgumentNullException(nameof(column)), precision, scale));
+		/// <summary>
+		/// Maps a column for the property with respect to the table map's class
+		/// </summary>
+		public IColumnMap Map(Expression<Func<T, float?>> column, int precision, int scale) => Map(new ColumnMap<T>(column ?? throw new ArgumentNullException(nameof(column)), precision, scale));
+		/// <summary>
+		/// Maps a column for the property with respect to the table map's class
+		/// </summary>
+		public IColumnMap Map(Expression<Func<T, double?>> column, int precision, int scale) => Map(new ColumnMap<T>(column ?? throw new ArgumentNullException(nameof(column)), precision, scale));
 
 		/// <summary>
 		/// Maps a column for the property with respect to the table map's class
 		/// </summary>
 		private IColumnMap Map(IColumnMap columnMap)
 		{
+			var (length, precision, scale) = (columnMap.Length, columnMap.Precision, columnMap.Scale);
 			//--Check for an existing map for the specified column.
 			var (declaringType, declaringProperty) = columnMap.Property.GetDeclaringType(getInterface: true);
 			if (!_columnMaps.TryGetValue(declaringProperty, out columnMap))
 			{
 				//--Always build for the most-common class/interface
-				_columnMaps[declaringProperty] = columnMap = new ColumnMap<T>(declaringProperty);
+				_columnMaps[declaringProperty] = columnMap = new ColumnMap<T>(declaringProperty)
+				{
+					Length = length,
+					Precision = precision,
+					Scale = scale
+				};
 			}
 
 			//--Iterate through each class, subclass, and interface

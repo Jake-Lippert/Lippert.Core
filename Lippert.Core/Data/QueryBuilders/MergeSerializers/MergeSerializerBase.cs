@@ -30,7 +30,7 @@ namespace Lippert.Core.Data.QueryBuilders
 			[typeof(int)] = "int",
 			[typeof(long)] = "bigint",
 			[typeof(float)] = "float",
-			[typeof(string)] = "nvarchar(max)"
+			[typeof(string)] = "nvarchar"
 		};
 
 		protected MergeSerializerBase(ITableMap<T> tableMap)
@@ -109,13 +109,30 @@ namespace Lippert.Core.Data.QueryBuilders
 		/// </summary>
 		public string BuildColumnParser(IColumnMap? columnMap)
 		{
-			return columnMap switch
+			if (columnMap is { } column)
 			{
-				IColumnMap column => FormatColumnParser(SqlServerQueryBuilder.BuildColumnIdentifier(column), column.Property.PropertyType, Aliases[column.Property]),
-				_ => FormatColumnParser(SqlServerMergeQueryBuilder.CorrelationIndexIdentifier, typeof(int), null)
-			};
+				var sqlType = _sqlTypes[column.Property.PropertyType];
+				if (column.Property.PropertyType == typeof(string))
+				{
+					sqlType = $"{sqlType}({(column.Length == int.MaxValue ? "max" : column.Length)})";
+				}
+				else if (column.Precision > 0 && (
+					column.Property.PropertyType == typeof(decimal) ||
+					column.Property.PropertyType == typeof(decimal?) ||
+					column.Property.PropertyType == typeof(float) ||
+					column.Property.PropertyType == typeof(float?) ||
+					column.Property.PropertyType == typeof(double) ||
+					column.Property.PropertyType == typeof(double?)))
+				{
+					sqlType = $"{sqlType}({column.Precision},{column.Scale})";
+				}
 
-			string FormatColumnParser(string columnIdentifier, Type type, string? alias) => $"{columnIdentifier} {_sqlTypes[type]} '{BuildColumnParserAlias(alias)}'";
+				return $"{SqlServerQueryBuilder.BuildColumnIdentifier(column)} {sqlType} '{BuildColumnParserAlias(Aliases[column.Property])}'";
+			}
+			else
+			{
+				return $"{SqlServerMergeQueryBuilder.CorrelationIndexIdentifier} {_sqlTypes[typeof(int)]} '{BuildColumnParserAlias(null)}'";
+			}
 		}
 	}
 }

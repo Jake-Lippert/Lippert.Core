@@ -8,9 +8,41 @@ namespace Lippert.Core.Data
 {
 	public class ColumnMap<T> : IColumnMap
 	{
+		internal ColumnMap(PropertyInfo property)
+		{
+			Property = property;
+			ColumnName = Property.Name;
+			if (Property.PropertyType == typeof(string))
+			{
+				Length = int.MaxValue;
+			}
+		}
+
 		internal ColumnMap(Expression<Func<T, object?>> column)
 			: this(PropertyAccessor.Get(column)) { }
-		internal ColumnMap(PropertyInfo property) => ColumnName = (Property = property).Name;
+		internal ColumnMap(Expression<Func<T, string?>> column, int length)
+			: this(PropertyAccessor.Get(column))
+		{
+			Length = length;
+		}
+		internal ColumnMap(Expression<Func<T, decimal?>> column, int precision, int scale)
+			: this(PropertyAccessor.Get(column))
+		{
+			Precision = precision;
+			Scale = scale;
+		}
+		internal ColumnMap(Expression<Func<T, float?>> column, int precision, int scale)
+			: this(PropertyAccessor.Get(column))
+		{
+			Precision = precision;
+			Scale = scale;
+		}
+		internal ColumnMap(Expression<Func<T, double?>> column, int precision, int scale)
+			: this(PropertyAccessor.Get(column))
+		{
+			Precision = precision;
+			Scale = scale;
+		}
 
 
 		public PropertyInfo Property { get; }
@@ -18,6 +50,10 @@ namespace Lippert.Core.Data
 
 		public ColumnBehavior Behavior { get; private set; } = ColumnBehavior.Basic;
 		public SqlOperation IgnoreOperations { get; private set; } = 0;
+
+		public int Length { get; internal set; }
+		public int Precision { get; internal set; }
+		public int Scale { get; internal set; }
 
 		public IColumnMap Key(bool isGenerated = true)
 		{

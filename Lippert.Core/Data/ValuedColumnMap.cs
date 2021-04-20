@@ -17,12 +17,14 @@ namespace Lippert.Core.Data
 		public object? Value { get; }
 
 		public PropertyInfo Property => _column.Property;
-
 		public string ColumnName => _column.ColumnName;
 
 		public ColumnBehavior Behavior => _column.Behavior;
-
 		public SqlOperation IgnoreOperations => _column.IgnoreOperations;
+
+		public int Length { get; }
+		public int Precision { get; }
+		public int Scale { get; }
 
 		public IColumnMap Generated(bool allowUpdates = false) => _column.Generated(allowUpdates);
 		public IColumnMap Ignore(SqlOperation behavior = SqlOperation.Insert | SqlOperation.Update | SqlOperation.Select) => _column.Ignore(behavior);

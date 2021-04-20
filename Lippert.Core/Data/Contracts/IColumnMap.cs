@@ -10,6 +10,10 @@ namespace Lippert.Core.Data.Contracts
 		ColumnBehavior Behavior { get; }
 		SqlOperation IgnoreOperations { get; }
 
+		int Length { get; }
+		int Precision { get; }
+		int Scale { get; }
+
 		IColumnMap Key(bool isGenerated = true);
 
 		IColumnMap Generated(bool allowUpdates = false);

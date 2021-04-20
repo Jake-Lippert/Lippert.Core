@@ -89,7 +89,35 @@ namespace Lippert.Core.Data.Contracts
 		/// <summary>
 		/// Maps a column for the property with respect to the table map's class
 		/// </summary>
+		/// <param name="column">Specifies the property to map to a column</param>
 		IColumnMap Map(Expression<Func<T, object?>> column);
+		/// <summary>
+		/// Maps a column for the string property with respect to the table map's class
+		/// </summary>
+		/// <param name="column">Specifies the property to map to a column</param>
+		/// <param name="length">Specifies the length of the string column</param>
+		IColumnMap Map(Expression<Func<T, string?>> column, int length);
+		/// <summary>
+		/// Maps a column for the decimal property with respect to the table map's class
+		/// </summary>
+		/// <param name="column">Specifies the property to map to a column</param>
+		/// <param name="precision">Specifies the precision of the decimal column</param>
+		/// <param name="scale">Specifies the scale of the decimal column</param>
+		IColumnMap Map(Expression<Func<T, decimal?>> column, int precision, int scale);
+		/// <summary>
+		/// Maps a column for the float property with respect to the table map's class
+		/// </summary>
+		/// <param name="column">Specifies the property to map to a column</param>
+		/// <param name="precision">Specifies the precision of the float column</param>
+		/// <param name="scale">Specifies the scale of the float column</param>
+		IColumnMap Map(Expression<Func<T, float?>> column, int precision, int scale);
+		/// <summary>
+		/// Maps a column for the double property with respect to the table map's class
+		/// </summary>
+		/// <param name="column">Specifies the property to map to a column</param>
+		/// <param name="precision">Specifies the precision of the float column</param>
+		/// <param name="scale">Specifies the scale of the float column</param>
+		IColumnMap Map(Expression<Func<T, double?>> column, int precision, int scale);
 
 		/// <summary>
 		/// Gets the column map for the property with respect to the table map's class
