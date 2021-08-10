@@ -186,5 +186,27 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 			Assert.AreEqual(1, deleteLines.Count);
 			Assert.AreEqual("when not matched by source and target.[SomeAwesomeFieldA] = @deleteFilter0 and target.[SomeAwesomeFieldB] = @deleteFilter1 then delete", deleteLines.Single());
 		}
+
+		[Test]
+		public void TestIgnoredPropertiesNotIncludedInOutputClause([Values(false, true)] bool autoMapBeforeIgnore)
+		{
+			//--Arrange
+			var mergeDefinition = new MergeDefinition<ModelWithCollection>().Insert();
+
+			//--Act
+			var outputColumns = new SqlServerMergeQueryBuilder().BuildOutputColumns(mergeDefinition, new TestSchema.TableMaps.ModelWithCollectionMap(autoMapBeforeIgnore)).ToList();
+			foreach (var column in outputColumns)
+			{
+				Console.WriteLine(column);
+			}
+
+			//--Assert
+			Assert.AreEqual(5, outputColumns.Count);
+			Assert.AreEqual("source.[<{CorrelationIndex}>] as [CorrelationIndex]", outputColumns[0]);
+			Assert.AreEqual("$action as [Action]", outputColumns[1]);
+			Assert.AreEqual("null as [<{Split}>]", outputColumns[2]);
+			Assert.AreEqual("inserted.[Id]", outputColumns[3]);
+			Assert.AreEqual("inserted.[Name]", outputColumns[4]);
+		}
 	}
 }

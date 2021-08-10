@@ -165,7 +165,7 @@ namespace Lippert.Core.Data.QueryBuilders
 			yield return $"$action as [{nameof(RecordMergeCorrelation.Action)}]";
 			yield return $"null as {BuildIdentifier(SplitOn)}";
 
-			foreach (var columnIdentifier in tableMap.InstanceColumns.Values.Select(BuildColumnIdentifier))
+			foreach (var columnIdentifier in tableMap.InstanceColumns.Values.Where(ic => ic.IgnoreOperations != (SqlOperation.Insert | SqlOperation.Update | SqlOperation.Select)).Select(BuildColumnIdentifier))
 			{
 				yield return (mergeDefinition.IncludeInsert, mergeDefinition.IncludeUpdate, mergeDefinition.IncludeDelete) switch
 				{

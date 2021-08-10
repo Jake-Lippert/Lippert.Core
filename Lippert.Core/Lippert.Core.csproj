@@ -7,7 +7,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageId>Lippert.Core</PackageId>
-		<Version>0.7.1</Version>
+		<Version>0.7.2</Version>
 		<Authors>Jake Lippert</Authors>
 		<Copyright>Jake Lippert 2021</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -41,7 +41,9 @@
 0.7.0
 - Adding ability to delete records as part of a merge statement; filters can be specified to limit deletions
 0.7.1
-- Now able to configure column length for strings and precision/scale for decimals, floats, and doubles in order to prevent undesirable rounding</PackageReleaseNotes>
+- Now able to configure column length for strings and precision/scale for decimals, floats, and doubles in order to prevent undesirable rounding
+0.7.2
+- Fixing an issue where completely-ignored properties were being included within the output clauses of merge statements</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
