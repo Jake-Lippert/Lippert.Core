@@ -23,10 +23,18 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 			//--Assert
 			Console.WriteLine(query);
 			var queryLines = SplitQuery(query);
-			Assert.AreEqual(3, queryLines.Length);
-			Assert.AreEqual("insert into [Client]([CreatedByUserId], [ModifiedByUserId], [Name], [IsActive])", queryLines[0]);
-			Assert.AreEqual("output inserted.[Id], inserted.[CreatedDateUtc], inserted.[ModifiedDateUtc]", queryLines[1]);
-			Assert.AreEqual("values(@CreatedByUserId, @ModifiedByUserId, @Name, @IsActive)", queryLines[2]);
+			Assert.AreEqual(new[]
+			{
+				"declare @outputResult table(",
+				"  [Id] uniqueidentifier,",
+				"  [CreatedDateUtc] datetime,",
+				"  [ModifiedDateUtc] datetime",
+				");",
+				"insert into [Client]([CreatedByUserId], [ModifiedByUserId], [Name], [IsActive])",
+				"output inserted.[Id], inserted.[CreatedDateUtc], inserted.[ModifiedDateUtc] into @outputResult([Id], [CreatedDateUtc], [ModifiedDateUtc])",
+				"values(@CreatedByUserId, @ModifiedByUserId, @Name, @IsActive);",
+				"select * from @outputResult;"
+			}, queryLines);
 		}
 
 		[Test]
@@ -38,9 +46,11 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 			//--Assert
 			Console.WriteLine(query);
 			var queryLines = SplitQuery(query);
-			Assert.AreEqual(2, queryLines.Length);
-			Assert.AreEqual("insert into [Client_User]([ClientId], [UserId], [IsActive])", queryLines[0]);
-			Assert.AreEqual("values(@ClientId, @UserId, @IsActive)", queryLines[1]);
+			Assert.AreEqual(new[]
+			{
+				"insert into [Client_User]([ClientId], [UserId], [IsActive])",
+				"values(@ClientId, @UserId, @IsActive);"
+			}, queryLines);
 		}
 	}
 }

@@ -68,9 +68,52 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 			//--Assert
 			Console.WriteLine(serialized);
 			var queryLines = SplitQuery(query);
-			Assert.AreEqual(3/*merge using correlationIndex*/ + 2/*key*/ + 2 * 36/*columns to update*/ + 2/*as source on () when matched*/ + 1/*output*/, queryLines.Length);
+			Assert.AreEqual(2/*declare table*/ + 3/*correlation*/ + 2/*key*/ + 36/*columns to update*/ + 3/*merge using correlationIndex*/ + 2/*key*/ + 2 * 36/*columns to update*/ + 2/*as source on () when matched*/ + 1/*output into*/ + 1/*select * from*/, queryLines.Length);
 			Assert.AreEqual(new[]
 			{
+"declare @outputResult table(",
+"  [CorrelationIndex] int,",
+"  [Action] nvarchar(max),",
+"  [<{Split}>] bit,",
+"  [IdA] uniqueidentifier,",
+"  [IdB] uniqueidentifier,",
+"  [Property1] smallint,",
+"  [Property2] nvarchar(max),",
+"  [Property3] nvarchar(max),",
+"  [Property4] nvarchar(max),",
+"  [Property5] nvarchar(max),",
+"  [Property6] nvarchar(max),",
+"  [Property7] nvarchar(max),",
+"  [Property8] nvarchar(max),",
+"  [Property9] nvarchar(max),",
+"  [PropertyA] nvarchar(max),",
+"  [PropertyB] nvarchar(max),",
+"  [PropertyC] nvarchar(max),",
+"  [PropertyD] nvarchar(max),",
+"  [PropertyE] nvarchar(max),",
+"  [PropertyF] nvarchar(max),",
+"  [PropertyG] nvarchar(max),",
+"  [PropertyH] nvarchar(max),",
+"  [PropertyI] nvarchar(max),",
+"  [PropertyJ] nvarchar(max),",
+"  [PropertyK] nvarchar(max),",
+"  [PropertyL] nvarchar(max),",
+"  [PropertyM] nvarchar(max),",
+"  [PropertyN] nvarchar(max),",
+"  [PropertyO] nvarchar(max),",
+"  [PropertyP] nvarchar(max),",
+"  [PropertyQ] nvarchar(max),",
+"  [PropertyR] nvarchar(max),",
+"  [PropertyS] nvarchar(max),",
+"  [PropertyT] nvarchar(max),",
+"  [PropertyU] nvarchar(max),",
+"  [PropertyV] nvarchar(max),",
+"  [PropertyW] nvarchar(max),",
+"  [PropertyX] nvarchar(max),",
+"  [PropertyY] nvarchar(max),",
+"  [PropertyZ] nvarchar(max),",
+"  [Property10] nvarchar(max)",
+");",
 "merge [LargeRecord] as target",
 "using (select * from openJson(@serialized) with (",
 "  [<{CorrelationIndex}>] int '$._',",
@@ -150,7 +193,8 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 "  target.[PropertyY] = source.[PropertyY],",
 "  target.[PropertyZ] = source.[PropertyZ],",
 "  target.[Property10] = source.[Property10]",
-"output source.[<{CorrelationIndex}>] as [CorrelationIndex], $action as [Action], null as [<{Split}>], inserted.[IdA], inserted.[IdB], inserted.[Property1], inserted.[Property2], inserted.[Property3], inserted.[Property4], inserted.[Property5], inserted.[Property6], inserted.[Property7], inserted.[Property8], inserted.[Property9], inserted.[PropertyA], inserted.[PropertyB], inserted.[PropertyC], inserted.[PropertyD], inserted.[PropertyE], inserted.[PropertyF], inserted.[PropertyG], inserted.[PropertyH], inserted.[PropertyI], inserted.[PropertyJ], inserted.[PropertyK], inserted.[PropertyL], inserted.[PropertyM], inserted.[PropertyN], inserted.[PropertyO], inserted.[PropertyP], inserted.[PropertyQ], inserted.[PropertyR], inserted.[PropertyS], inserted.[PropertyT], inserted.[PropertyU], inserted.[PropertyV], inserted.[PropertyW], inserted.[PropertyX], inserted.[PropertyY], inserted.[PropertyZ], inserted.[Property10];"
+"output source.[<{CorrelationIndex}>], $action, null, inserted.[IdA], inserted.[IdB], inserted.[Property1], inserted.[Property2], inserted.[Property3], inserted.[Property4], inserted.[Property5], inserted.[Property6], inserted.[Property7], inserted.[Property8], inserted.[Property9], inserted.[PropertyA], inserted.[PropertyB], inserted.[PropertyC], inserted.[PropertyD], inserted.[PropertyE], inserted.[PropertyF], inserted.[PropertyG], inserted.[PropertyH], inserted.[PropertyI], inserted.[PropertyJ], inserted.[PropertyK], inserted.[PropertyL], inserted.[PropertyM], inserted.[PropertyN], inserted.[PropertyO], inserted.[PropertyP], inserted.[PropertyQ], inserted.[PropertyR], inserted.[PropertyS], inserted.[PropertyT], inserted.[PropertyU], inserted.[PropertyV], inserted.[PropertyW], inserted.[PropertyX], inserted.[PropertyY], inserted.[PropertyZ], inserted.[Property10] into @outputResult([CorrelationIndex], [Action], [<{Split}>], [IdA], [IdB], [Property1], [Property2], [Property3], [Property4], [Property5], [Property6], [Property7], [Property8], [Property9], [PropertyA], [PropertyB], [PropertyC], [PropertyD], [PropertyE], [PropertyF], [PropertyG], [PropertyH], [PropertyI], [PropertyJ], [PropertyK], [PropertyL], [PropertyM], [PropertyN], [PropertyO], [PropertyP], [PropertyQ], [PropertyR], [PropertyS], [PropertyT], [PropertyU], [PropertyV], [PropertyW], [PropertyX], [PropertyY], [PropertyZ], [Property10]);",
+"select * from @outputResult;"
 			}, queryLines);
 			Assert.AreEqual($"[{{\"_\":0,\"_0\":\"{largeRecords[0].IdA}\",\"_1\":\"{largeRecords[0].IdB}\",\"_2\":2,\"_3\":null,\"_4\":null,\"_5\":null,\"_6\":null,\"_7\":null,\"_8\":null,\"_9\":null,\"_a\":null,\"_b\":null,\"_c\":null,\"_d\":null,\"_e\":null,\"_f\":null,\"_g\":null,\"_h\":null,\"_i\":null,\"_j\":null,\"_k\":null,\"_l\":null,\"_m\":null,\"_n\":null,\"_o\":null,\"_p\":null,\"_q\":null,\"_r\":null,\"_s\":null,\"_t\":null,\"_u\":null,\"_v\":null,\"_w\":null,\"_x\":null,\"_y\":null,\"_z\":null,\"_10\":null,\"_11\":null}}]", serialized);
 		}
@@ -194,6 +238,7 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 			var mergeDefinition = new MergeDefinition<ModelWithCollection>().Insert();
 
 			//--Act
+			new SqlServerMergeQueryBuilder().Merge(out var mergeSerializer, mergeDefinition, useJson: true);
 			var outputColumns = new SqlServerMergeQueryBuilder().BuildOutputColumns(mergeDefinition, new TestSchema.TableMaps.ModelWithCollectionMap(autoMapBeforeIgnore)).ToList();
 			foreach (var column in outputColumns)
 			{
@@ -202,11 +247,41 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 
 			//--Assert
 			Assert.AreEqual(5, outputColumns.Count);
-			Assert.AreEqual("source.[<{CorrelationIndex}>] as [CorrelationIndex]", outputColumns[0]);
-			Assert.AreEqual("$action as [Action]", outputColumns[1]);
-			Assert.AreEqual("null as [<{Split}>]", outputColumns[2]);
-			Assert.AreEqual("inserted.[Id]", outputColumns[3]);
-			Assert.AreEqual("inserted.[Name]", outputColumns[4]);
+			Assert.AreEqual(("source.[<{CorrelationIndex}>]", "[CorrelationIndex]", "int"), outputColumns[0]);
+			Assert.AreEqual(("$action", "[Action]", "nvarchar(max)"), outputColumns[1]);
+			Assert.AreEqual(("null", "[<{Split}>]", "bit"), outputColumns[2]);
+			Assert.AreEqual(("inserted.[Id]", "[Id]", "uniqueidentifier"), outputColumns[3]);
+			Assert.AreEqual(("inserted.[Name]", "[Name]", "nvarchar(max)"), outputColumns[4]);
+		}
+
+		[Test]
+		public void TestThrowsInvalidOperationExceptionWhenAttemptingToBuildAMergeWhenNoKeyConfigured([Values(true, false)] bool useJson, [Values(true, false)] bool includeInsert, [Values(true, false)] bool includeUpdate, [Values(true, false)] bool includeDelete)
+		{
+			//--Arrange
+			var mergeDefinition = new MergeDefinition<Gnocchi>();
+			if (includeInsert)
+			{
+				mergeDefinition.Insert();
+			}
+			if (includeUpdate)
+			{
+				mergeDefinition.Update();
+			}
+			if (includeDelete)
+			{
+				mergeDefinition.Delete();
+			}
+
+			//--Act/Assert
+			switch ((mergeDefinition.IncludeInsert, mergeDefinition.IncludeUpdate, mergeDefinition.IncludeDelete))
+			{
+				case (false, false, false):
+					Assert.Throws<ArgumentException>(() => new SqlServerMergeQueryBuilder().Merge(out var aliases, mergeDefinition, useJson: useJson));
+					break;
+				default:
+					Assert.Throws<InvalidOperationException>(() => new SqlServerMergeQueryBuilder().Merge(out var mergeSerializer, mergeDefinition, useJson: useJson));
+					break;
+			}
 		}
 	}
 }

@@ -12,15 +12,19 @@ namespace Lippert.Core.Data.QueryBuilders
 		{
 			var insertColumns = tableMap.InsertColumns;
 			var insert = $"insert into {BuildTableIdentifier(tableMap)}({string.Join(", ", insertColumns.Select(BuildColumnIdentifier))})";
-			var values = $"values({string.Join(", ", insertColumns.Select(ic => BuildColumnParameter(ic)))})";
+			var values = $"values({string.Join(", ", insertColumns.Select(ic => BuildColumnParameter(ic)))});";
 
 			var generatedColumns = tableMap.GeneratedColumns;
 			if (generatedColumns.Any())
 			{
 				return string.Join(Environment.NewLine,
+					"declare @outputResult table(",
+					string.Join($",{Environment.NewLine}", generatedColumns.Select(c => $"  {BuildColumnIdentifier(c)} {c.GetSqlType()}")),
+					");",
 					insert,
-					$"output {string.Join(", ", generatedColumns.Select(c => $"inserted.{BuildColumnIdentifier(c)}"))}",
-					values);
+					$"output {string.Join(", ", generatedColumns.Select(c => $"inserted.{BuildColumnIdentifier(c)}"))} into @outputResult({string.Join(", ", generatedColumns.Select(c => BuildColumnIdentifier(c)))})",
+					values,
+					"select * from @outputResult;");
 			}
 			else
 			{

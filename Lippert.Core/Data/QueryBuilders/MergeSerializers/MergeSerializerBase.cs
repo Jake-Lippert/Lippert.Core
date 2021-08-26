@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Lippert.Core.Collections;
 using Lippert.Core.Collections.Extensions;
 using Lippert.Core.Data.Contracts;
 using Lippert.Core.Extensions;
@@ -16,39 +15,10 @@ namespace Lippert.Core.Data.QueryBuilders
 	/// <typeparam name="T">The type to be serialized for merge operations</typeparam>
 	public abstract class MergeSerializerBase<T> : Contracts.IMergeSerializer<T>
 	{
-		private readonly IDictionary<Type, string> _sqlTypes;
-		private static readonly Dictionary<Type, string> _sqlTypeLookup = new Dictionary<Type, string>
-		{
-			[typeof(Guid)] = "uniqueidentifier",
-			[typeof(bool)] = "bit",
-			[typeof(byte)] = "tinyint",
-			[typeof(char)] = "nvarchar",
-			[typeof(DateTime)] = "datetime",
-			[typeof(decimal)] = "decimal",
-			[typeof(double)] = "float",
-			[typeof(short)] = "smallint",
-			[typeof(int)] = "int",
-			[typeof(long)] = "bigint",
-			[typeof(float)] = "float",
-			[typeof(string)] = "nvarchar"
-		};
-
 		protected MergeSerializerBase(ITableMap<T> tableMap)
 		{
 			TableMap = tableMap;
 			Aliases = BuildShortColumnNames(TableMap.InstanceColumns.Select(c => c.Value));
-			_sqlTypes = RetrievalDictionary.Build((Type type) => GetSqlType(type));
-
-			/// <summary>
-			/// Get the sql type for the specified .Net type
-			/// </summary>
-			static string GetSqlType(Type type) => type switch
-			{
-				//--Investigate if there's any way to get to a SqlMapper.TypeHandler; probably can't from this library.
-				{ IsEnum: true } => GetSqlType(Enum.GetUnderlyingType(type)),
-				{ IsGenericType: true } when type.GetGenericTypeDefinition() == typeof(Nullable<>) => GetSqlType(Nullable.GetUnderlyingType(type)),
-				_ => _sqlTypeLookup[type]
-			};
 		}
 
 		/// <summary>
@@ -107,32 +77,10 @@ namespace Lippert.Core.Data.QueryBuilders
 		/// <summary>
 		/// Build the sql that's needed for each column defined by the openXml or openJson with(...) clause
 		/// </summary>
-		public string BuildColumnParser(IColumnMap? columnMap)
+		public string BuildColumnParser(IColumnMap? columnMap) => columnMap switch
 		{
-			if (columnMap is { } column)
-			{
-				var sqlType = _sqlTypes[column.Property.PropertyType];
-				if (column.Property.PropertyType == typeof(string))
-				{
-					sqlType = $"{sqlType}({(column.Length == int.MaxValue ? "max" : column.Length)})";
-				}
-				else if (column.Precision > 0 && (
-					column.Property.PropertyType == typeof(decimal) ||
-					column.Property.PropertyType == typeof(decimal?) ||
-					column.Property.PropertyType == typeof(float) ||
-					column.Property.PropertyType == typeof(float?) ||
-					column.Property.PropertyType == typeof(double) ||
-					column.Property.PropertyType == typeof(double?)))
-				{
-					sqlType = $"{sqlType}({column.Precision},{column.Scale})";
-				}
-
-				return $"{SqlServerQueryBuilder.BuildColumnIdentifier(column)} {sqlType} '{BuildColumnParserAlias(Aliases[column.Property])}'";
-			}
-			else
-			{
-				return $"{SqlServerMergeQueryBuilder.CorrelationIndexIdentifier} {_sqlTypes[typeof(int)]} '{BuildColumnParserAlias(null)}'";
-			}
-		}
+			{ } column => $"{SqlServerQueryBuilder.BuildColumnIdentifier(column)} {column.GetSqlType()} '{BuildColumnParserAlias(Aliases[column.Property])}'",
+			_ => $"{SqlServerMergeQueryBuilder.CorrelationIndexIdentifier} {SqlTypeLookup.GetSqlType<int>()} '{BuildColumnParserAlias(null)}'"
+		};
 	}
 }

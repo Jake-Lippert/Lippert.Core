@@ -38,7 +38,11 @@ namespace Lippert.Core.Data.QueryBuilders
 
 			//--Build a merge serializer and the core of the merge statement
 			mergeSerializer = useJson ? new JsonMergeSerializer<T>(tableMap) : new XmlMergeSerializer<T>(tableMap);
+			var outputColumns = BuildOutputColumns(mergeDefinition, tableMap);
 			var merge = new System.Text.StringBuilder();
+			merge.AppendLine("declare @outputResult table(");
+			merge.AppendLine(string.Join($",{Environment.NewLine}", outputColumns.Select(column => $"  {column.columnIdentifier} {column.sqlType}")));
+			merge.AppendLine(");");
 			merge.AppendLines(BuildCoreMergeLines(mergeSerializer, mergeDefinition, tableMap));
 
 			//--Build the components of the merge
@@ -47,7 +51,8 @@ namespace Lippert.Core.Data.QueryBuilders
 			merge.AppendLines(BuildDeleteLines(mergeDefinition));
 
 			//--Build the merge's output statement so we can determine which records were inserted/updated/deleted
-			merge.Append($"output {string.Join(", ", BuildOutputColumns(mergeDefinition, tableMap))};");
+			merge.AppendLine($"output {string.Join(", ", outputColumns.Select(oc => oc.value))} into @outputResult({string.Join(", ", outputColumns.Select(column => column.columnIdentifier))});");
+			merge.Append("select * from @outputResult;");
 
 			return merge.ToString();
 		}
@@ -98,6 +103,11 @@ namespace Lippert.Core.Data.QueryBuilders
 			}
 			IEnumerable<string> BuildJoinConditions()
 			{
+				if (!mergeSerializer.TableMap.KeyColumns.Any())
+				{
+					throw new InvalidOperationException($"At least one key column must be configured for type '{mergeSerializer.TableMap.ModelType.FullName}'");
+				}
+
 				foreach (var keyColumn in mergeSerializer.TableMap.KeyColumns)
 				{
 					var columnIdentifier = BuildColumnIdentifier(keyColumn);
@@ -155,24 +165,27 @@ namespace Lippert.Core.Data.QueryBuilders
 		/// <summary>
 		/// Build the output columns for the merge statement
 		/// </summary>
-		public IEnumerable<string> BuildOutputColumns<T>(MergeDefinition<T> mergeDefinition, ITableMap<T> tableMap)
+		public IEnumerable<(string value, string columnIdentifier, string sqlType)> BuildOutputColumns<T>(MergeDefinition<T> mergeDefinition, ITableMap<T> tableMap)
 		{
-			yield return $@"{(mergeDefinition.IncludeInsert, mergeDefinition.IncludeUpdate, mergeDefinition.IncludeDelete) switch
+			var correlation = new ColumnMap<RecordMergeCorrelation>(x => x.CorrelationIndex);
+			yield return ((mergeDefinition.IncludeInsert, mergeDefinition.IncludeUpdate, mergeDefinition.IncludeDelete) switch
 			{
 				(false, false, true) => "null",//--If this is a Delete-only merge statement 'source' won't be able to be bound, so just use null
 				_ => $"source.{CorrelationIndexIdentifier}"
-			}} as [{nameof(RecordMergeCorrelation.CorrelationIndex)}]";
-			yield return $"$action as [{nameof(RecordMergeCorrelation.Action)}]";
-			yield return $"null as {BuildIdentifier(SplitOn)}";
+			}, BuildColumnIdentifier(correlation), correlation.GetSqlType());
+			var action = new ColumnMap<RecordMergeCorrelation>(x => x.Action);
+			yield return ("$action", BuildColumnIdentifier(action), action.GetSqlType());
+			yield return ("null", BuildIdentifier(SplitOn), "bit");
 
-			foreach (var columnIdentifier in tableMap.InstanceColumns.Values.Where(ic => ic.IgnoreOperations != (SqlOperation.Insert | SqlOperation.Update | SqlOperation.Select)).Select(BuildColumnIdentifier))
+			foreach (var column in tableMap.InstanceColumns.Values.Where(ic => ic.IgnoreOperations != (SqlOperation.Insert | SqlOperation.Update | SqlOperation.Select)))
 			{
-				yield return (mergeDefinition.IncludeInsert, mergeDefinition.IncludeUpdate, mergeDefinition.IncludeDelete) switch
+				var columnIdentifier = BuildColumnIdentifier(column);
+				yield return ((mergeDefinition.IncludeInsert, mergeDefinition.IncludeUpdate, mergeDefinition.IncludeDelete) switch
 				{
 					(false, false, true) => $"deleted.{columnIdentifier}",
-					(_, _, true) => $"coalesce(inserted.{columnIdentifier}, deleted.{columnIdentifier}) as {columnIdentifier}",
+					(_, _, true) => $"coalesce(inserted.{columnIdentifier}, deleted.{columnIdentifier})",
 					(_, _, false) => $"inserted.{columnIdentifier}"
-				};
+				}, columnIdentifier, column.GetSqlType());
 			}
 		}
 

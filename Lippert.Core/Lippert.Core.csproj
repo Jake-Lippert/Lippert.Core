@@ -7,7 +7,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageId>Lippert.Core</PackageId>
-		<Version>0.7.2</Version>
+		<Version>0.7.3</Version>
 		<Authors>Jake Lippert</Authors>
 		<Copyright>Jake Lippert 2021</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -43,7 +43,11 @@
 0.7.1
 - Now able to configure column length for strings and precision/scale for decimals, floats, and doubles in order to prevent undesirable rounding
 0.7.2
-- Fixing an issue where completely-ignored properties were being included within the output clauses of merge statements</PackageReleaseNotes>
+- Fixing an issue where completely-ignored properties were being included within the output clauses of merge statements
+0.7.3
+- Merges and inserts now build table variables to output their results into in order to prevent sql explosions when triggers are present
+- Refactored lookups of sql types out into a reusable class that isn't tied to merge serialization
+- Merges now check for the presence of key column properties when building the on clause; an exception will be thrown describing the problem</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
