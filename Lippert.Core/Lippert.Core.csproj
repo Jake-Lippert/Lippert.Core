@@ -7,7 +7,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageId>Lippert.Core</PackageId>
-		<Version>0.7.3</Version>
+		<Version>0.8.0</Version>
 		<Authors>Jake Lippert</Authors>
 		<Copyright>Jake Lippert 2021</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -47,7 +47,10 @@
 0.7.3
 - Merges and inserts now build table variables to output their results into in order to prevent sql explosions when triggers are present
 - Refactored lookups of sql types out into a reusable class that isn't tied to merge serialization
-- Merges now check for the presence of key column properties when building the on clause; an exception will be thrown describing the problem</PackageReleaseNotes>
+- Merges now check for the presence of key column properties when building the on clause; an exception will be thrown describing the problem
+0.8.0
+- Merges now check for the presence of update column properties when building statements with updates included; an exception will be thrown describing the problem
+- NTree now has key functionality in order to retrive a sub-tree node</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">

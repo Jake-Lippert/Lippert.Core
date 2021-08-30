@@ -367,6 +367,82 @@ namespace Lippert.Core.Tests.Collections.Extensions
 			Assert.AreEqual("Dir C/Dir C1/File 4", tree.Children[2].Children[0].Children[0].Value);
 			Assert.AreEqual("Dir C/Dir C2", tree.Children[2].Children[1].Value);
 			Assert.AreEqual("Dir C/Dir C2/File 5", tree.Children[2].Children[1].Children[0].Value);
+
+			Assert.IsFalse(tree.TryGetNode("Dir D", out var _));
+			Assert.Throws<KeyNotFoundException>(() => _ = tree["Dir D"]);
+			foreach (var directory in expectedDirectories)
+			{
+				Assert.IsTrue(tree.TryGetNode(directory, out var node));
+				Assert.AreEqual(directory, node?.Key);
+				Assert.AreEqual(directory, tree[directory].Value);
+			}
+		}
+
+		[Test]
+		public void TestBuildsNTreeWithSingleRootAndEnumerates()
+		{
+			//--Arrange
+			var expectedDirectories = new string?[]
+			{
+				"Dir A",
+				"Dir A/Dir A1",
+				"Dir A/Dir A1/File 1",
+				"Dir A/Dir A1/File 2",
+				"Dir A/Dir A1/File 3",
+				"Dir A/Dir A2",
+				"Dir A/Dir A2/File 0"
+			};
+
+			//--Act
+			var tree = expectedDirectories.ToNTree(x => x, x => x!.LastIndexOf('/') < 0 ? null : x.Substring(0, x.LastIndexOf('/')), null);
+
+			//--Assert
+			Assert.AreEqual(expectedDirectories.Length + 1, tree.Count());
+			Assert.AreEqual(null, tree.Value);
+			Assert.AreEqual("Dir A", tree.Children[0].Value);
+			Assert.AreEqual("Dir A/Dir A1", tree.Children[0].Children[0].Value);
+			Assert.AreEqual("Dir A/Dir A1/File 1", tree.Children[0].Children[0].Children[0].Value);
+			Assert.AreEqual("Dir A/Dir A1/File 2", tree.Children[0].Children[0].Children[1].Value);
+			Assert.AreEqual("Dir A/Dir A1/File 3", tree.Children[0].Children[0].Children[2].Value);
+			Assert.AreEqual("Dir A/Dir A2", tree.Children[0].Children[1].Value);
+			Assert.AreEqual("Dir A/Dir A2/File 0", tree.Children[0].Children[1].Children[0].Value);
+
+			Assert.IsFalse(tree.TryGetNode("Dir D", out var _));
+			Assert.Throws<KeyNotFoundException>(() => _ = tree["Dir D"]);
+			foreach (var directory in expectedDirectories)
+			{
+				Assert.IsTrue(tree.TryGetNode(directory, out var node));
+				Assert.AreEqual(directory, node?.Key);
+				Assert.AreEqual(directory, tree[directory].Value);
+			}
+		}
+
+		[Test]
+		public void TestBuildsNTreeWithSingleRootMatchingDefaultAndEnumerates()
+		{
+			//--Arrange
+			var expectedDirectories = new string[]
+			{
+				"Dir A/Dir A1",
+				"Dir A/Dir A1/File 1",
+				"Dir A/Dir A1/File 2",
+				"Dir A/Dir A1/File 3",
+				"Dir A/Dir A2",
+				"Dir A/Dir A2/File 0"
+			};
+
+			//--Act
+			var tree = expectedDirectories.OrderBy(x => Guid.NewGuid()).ToNTree(x => x, x => x!.LastIndexOf('/') < 0 ? null : x.Substring(0, x.LastIndexOf('/')), "Dir A");
+
+			//--Assert
+			Assert.AreEqual(expectedDirectories.Length + 1, tree.Count());
+			Assert.AreEqual("Dir A", tree.Value);
+			Assert.IsTrue(tree.TryGetNode("Dir A/Dir A1", out var dirA));
+			Assert.IsTrue(dirA!.TryGetNode("Dir A/Dir A1/File 1", out _));
+			Assert.IsTrue(dirA.TryGetNode("Dir A/Dir A1/File 2", out _));
+			Assert.IsTrue(dirA.TryGetNode("Dir A/Dir A1/File 3", out _));
+			Assert.IsTrue(tree.TryGetNode("Dir A/Dir A2", out var dirB));
+			Assert.IsTrue(dirB!.TryGetNode("Dir A/Dir A2/File 0", out _));
 		}
 	}
 }

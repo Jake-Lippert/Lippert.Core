@@ -152,28 +152,28 @@ namespace Lippert.Core.Collections.Extensions
 			source.Indexed().ToDictionary(x => keySelector(x.item, x.index), x => valueSelector(x.item, x.index));
 
 		public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source) => source.ToHashSet(x => x);
-		public static HashSet<TSet> ToHashSet<TSource, TSet>(this IEnumerable<TSource> source, Func<TSource, TSet> selector) => new HashSet<TSet>(source.ToList().Select(selector));
+		public static HashSet<TSet> ToHashSet<TSource, TSet>(this IEnumerable<TSource> source, Func<TSource, TSet> selector) => new(source.ToList().Select(selector));
 
 		public static MutableLookup<TKey, T> ToMutableLookup<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector) =>
 			source.ToMutableLookup(keySelector, x => x);
 		public static MutableLookup<TKey, TElement> ToMutableLookup<T, TKey, TElement>(this IEnumerable<T> source, Func<T, TKey> keySelector, Func<T, TElement> elementSelector) =>
-			new MutableLookup<TKey, TElement>(source.GroupBy(keySelector, elementSelector));
+			new(source.GroupBy(keySelector, elementSelector));
 
 		/// <summary>
 		/// Builds an N-Tree given the parent-child relations specified
 		/// </summary>
 		/// <seealso cref="https://stackoverflow.com/a/18018037/595473"/>
-		public static NTree<T> ToNTree<T, TId>(this IEnumerable<T> source, Func<T, TId> idSelector, Func<T, TId> parentIdSelector, T defaultRoot)
+		public static NTree<TKey, TValue> ToNTree<TValue, TKey>(this IEnumerable<TValue> source, Func<TValue, TKey> keySelector, Func<TValue, TKey> parentKeySelector, TValue defaultRoot)
 		{
 			//--Initialize the map
-			var nodeMap = source.ToDictionary(idSelector, x => (ParentId: parentIdSelector(x), Tree: new NTree<T>(x)));
+			var nodeMap = source.ToDictionary(keySelector, x => (ParentId: parentKeySelector(x), Tree: new NTree<TKey, TValue>(keySelector(x), x)));
 
-			var roots = new List<NTree<T>>();
+			List<NTree<TKey, TValue>> roots = new(), parentsNotFound = new();
 			foreach (var (parentId, tree) in nodeMap.Values)
 			{
 				//--TODO: I don't like adding the !, but it seems to be the only way to avoid being yelled at by the compiler at the moment.
 				//  Besides, the Equals check won't explode if the default value ends up being null
-				if (Equals(parentId, default(TId)!))
+				if (Equals(parentId, default(TKey)!))
 				{
 					roots.Add(tree);
 				}
@@ -182,11 +182,27 @@ namespace Lippert.Core.Collections.Extensions
 				{
 					parentNode.Tree.Add(tree);
 				}
+				else
+				{
+					parentsNotFound.Add(tree);
+				}
 			}
 
-			return roots.Count == 1 ? roots.Single() : new NTree<T>(defaultRoot)
+			return roots.Count switch
 			{
-				Children = roots
+				//--If we have no roots
+				0 => new NTree<TKey, TValue>(keySelector(defaultRoot), defaultRoot)
+				{
+					Children = parentsNotFound
+				},
+				//--If we have a single root whose parent key doesn't match the specified default root
+				1 when roots.Single() is var root && !Equals(parentKeySelector(root.Value), keySelector(defaultRoot)) => root,
+				//--If we have one root whose parent key matches the specified default root
+				//--If we have multiple roots
+				_ => new NTree<TKey, TValue>(keySelector(defaultRoot), defaultRoot)
+				{
+					Children = roots
+				}
 			};
 		}
 

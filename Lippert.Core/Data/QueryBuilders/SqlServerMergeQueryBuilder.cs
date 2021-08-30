@@ -143,6 +143,11 @@ namespace Lippert.Core.Data.QueryBuilders
 		{
 			if (mergeDefinition.IncludeUpdate)
 			{
+				if (!tableMap.UpdateColumns.Any())
+				{
+					throw new InvalidOperationException($"At least one update column must be configured for type '{tableMap.ModelType.FullName}'");
+				}
+
 				yield return "when matched then update set";
 				yield return $"{string.Join($",{Environment.NewLine}", BuildUpdateValueAssignments())}";
 			}
