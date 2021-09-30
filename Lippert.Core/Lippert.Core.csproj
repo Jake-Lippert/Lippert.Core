@@ -7,7 +7,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageId>Lippert.Core</PackageId>
-		<Version>0.8.0</Version>
+		<Version>0.8.1</Version>
 		<Authors>Jake Lippert</Authors>
 		<Copyright>Jake Lippert 2021</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -50,7 +50,9 @@
 - Merges now check for the presence of key column properties when building the on clause; an exception will be thrown describing the problem
 0.8.0
 - Merges now check for the presence of update column properties when building statements with updates included; an exception will be thrown describing the problem
-- NTree now has key functionality in order to retrive a sub-tree node</PackageReleaseNotes>
+- NTree now has key functionality in order to retrive a sub-tree node
+0.8.1
+- Updates, deletes, and delete filters for merges now generate 'is null' when valued column maps specify a null value to filter against</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">

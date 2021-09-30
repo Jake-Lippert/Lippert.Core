@@ -25,7 +25,11 @@ namespace Lippert.Core.Data.QueryBuilders
 		public static string BuildTableIdentifier(ITableMap table) => BuildIdentifier(table.TableName);
 		public static string BuildColumnIdentifier(IColumnMap column) => BuildIdentifier(column.ColumnName);
 		public static string BuildColumnParameter(IColumnMap column, bool prependUnderscore = false) => $"@{(prependUnderscore ? "_" : null)}{column.ColumnName}";
-		public static string BuildColumnEquals(IColumnMap column, bool prependUnderscore = false) => $"{BuildColumnIdentifier(column)} = {BuildColumnParameter(column, prependUnderscore)}";
-		public static string BuildWhereClause(IEnumerable<IColumnMap> columns) => $"where {string.Join(" and ", columns.Select(c => BuildColumnEquals(c)))}";
+		public static string BuildColumnEquals(IColumnMap column, bool prependUnderscore = false, bool allowIsNullConversion = false) => column switch
+		{
+			ValuedColumnMap { Value: null } when allowIsNullConversion => $"{BuildColumnIdentifier(column)} is null",
+			_ => $"{BuildColumnIdentifier(column)} = {BuildColumnParameter(column, prependUnderscore)}"
+		};
+		public static string BuildWhereClause(IEnumerable<IColumnMap> columns) => $"where {string.Join(" and ", columns.Select(c => BuildColumnEquals(c, allowIsNullConversion: true)))}";
 	}
 }

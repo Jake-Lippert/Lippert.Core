@@ -68,5 +68,39 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 			Assert.Throws<ArgumentException>(() => new SqlServerUpdateQueryBuilder().Update(new UpdateBuilder<Client>()
 				.Set(x => x.CreatedByUserId)));
 		}
+
+		[Test]
+		public void TestBuildsSelectiveUpdateQueryWhereFieldIsNull()
+		{
+			//--Act
+			var query = new SqlServerUpdateQueryBuilder().Update(new ValuedUpdateBuilder<SuperEmployee>()
+				.Set(se => se.SomeAwesomeFieldB, null)
+				.Filter(se => se.SomeAwesomeFieldA, null));
+
+			//--Assert
+			Console.WriteLine(query);
+			var queryLines = SplitQuery(query);
+			Assert.AreEqual(3, queryLines.Length);
+			Assert.AreEqual("update [SuperEmployee]", queryLines[0]);
+			Assert.AreEqual("set [SomeAwesomeFieldB] = @SomeAwesomeFieldB", queryLines[1]);
+			Assert.AreEqual("where [SomeAwesomeFieldA] is null", queryLines[2]);
+		}
+
+		[Test]
+		public void TestBuildsSelectiveUpdateQueryWhereFieldHasValue()
+		{
+			//--Act
+			var query = new SqlServerUpdateQueryBuilder().Update(new ValuedUpdateBuilder<SuperEmployee>()
+				.Set(se => se.SomeAwesomeFieldB, null)
+				.Filter(se => se.SomeAwesomeFieldA, Guid.NewGuid().ToString()));
+
+			//--Assert
+			Console.WriteLine(query);
+			var queryLines = SplitQuery(query);
+			Assert.AreEqual(3, queryLines.Length);
+			Assert.AreEqual("update [SuperEmployee]", queryLines[0]);
+			Assert.AreEqual("set [SomeAwesomeFieldB] = @SomeAwesomeFieldB", queryLines[1]);
+			Assert.AreEqual("where [SomeAwesomeFieldA] = @SomeAwesomeFieldA", queryLines[2]);
+		}
 	}
 }

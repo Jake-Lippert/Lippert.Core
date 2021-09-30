@@ -69,5 +69,33 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 			Assert.AreEqual("delete from [Client_User]", queryLines[0]);
 			Assert.AreEqual("where [UserId] = @UserId and [IsActive] = @IsActive", queryLines[1]);
 		}
+
+		[Test]
+		public void TestBuildsDeleteQueryWhereFieldIsNull()
+		{
+			//--Act
+			var query = new SqlServerDeleteQueryBuilder().Delete(new ValuedPredicateBuilder<SuperEmployee>().Filter(x => x.SomeAwesomeFieldA, null));
+
+			//--Assert
+			Console.WriteLine(query);
+			var queryLines = SplitQuery(query);
+			Assert.AreEqual(2, queryLines.Length);
+			Assert.AreEqual("delete from [SuperEmployee]", queryLines[0]);
+			Assert.AreEqual("where [SomeAwesomeFieldA] is null", queryLines[1]);
+		}
+
+		[Test]
+		public void TestBuildsDeleteQueryWhereFieldHasValue()
+		{
+			//--Act
+			var query = new SqlServerDeleteQueryBuilder().Delete(new ValuedPredicateBuilder<SuperEmployee>().Filter(x => x.SomeAwesomeFieldA, Guid.NewGuid().ToString()));
+
+			//--Assert
+			Console.WriteLine(query);
+			var queryLines = SplitQuery(query);
+			Assert.AreEqual(2, queryLines.Length);
+			Assert.AreEqual("delete from [SuperEmployee]", queryLines[0]);
+			Assert.AreEqual("where [SomeAwesomeFieldA] = @SomeAwesomeFieldA", queryLines[1]);
+		}
 	}
 }

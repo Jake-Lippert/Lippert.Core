@@ -228,7 +228,7 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 
 			//--Assert
 			Assert.AreEqual(1, deleteLines.Count);
-			Assert.AreEqual("when not matched by source and target.[SomeAwesomeFieldA] = @deleteFilter0 and target.[SomeAwesomeFieldB] = @deleteFilter1 then delete", deleteLines.Single());
+			Assert.AreEqual("when not matched by source and target.[SomeAwesomeFieldA] = @deleteFilter0 and target.[SomeAwesomeFieldB] is null then delete", deleteLines.Single());
 		}
 
 		[Test]

@@ -164,7 +164,13 @@ namespace Lippert.Core.Data.QueryBuilders
 		{
 			if (mergeDefinition.IncludeDelete)
 			{
-				yield return $"when not matched by source{string.Join("", mergeDefinition.GetDeleteFilterColumns().Select((dc, i) => $" and target.{BuildColumnIdentifier(dc)} = @deleteFilter{i}"))} then delete";
+				yield return $"when not matched by source{string.Join("", mergeDefinition.GetDeleteFilterColumns().Select(BuildColumnFilter))} then delete";
+
+				static string BuildColumnFilter(IValuedColumnMap valuedColumnMap, int index) => valuedColumnMap switch
+				{
+					{ Value: null } => $" and target.{BuildColumnIdentifier(valuedColumnMap)} is null",
+					_ => $" and target.{BuildColumnIdentifier(valuedColumnMap)} = @deleteFilter{index}"
+				};
 			}
 		}
 		/// <summary>

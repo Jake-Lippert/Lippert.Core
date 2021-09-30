@@ -19,7 +19,7 @@ namespace Lippert.Core.Data.QueryBuilders
 
 			return string.Join(Environment.NewLine,
 				$"update {BuildTableIdentifier(updateBuilder.TableMap)}",
-				$"set {string.Join(", ", setColumns.Select(sc => BuildColumnEquals(sc, underscoreRequired)))}",
+				$"set {string.Join(", ", setColumns.Select(sc => BuildColumnEquals(sc, prependUnderscore: underscoreRequired)))}",
 				BuildWhereClause(filterColumns));
 		}
 	}
