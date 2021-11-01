@@ -98,6 +98,12 @@ namespace Lippert.Core.Data.Contracts
 		/// <param name="length">Specifies the length of the string column</param>
 		IColumnMap Map(Expression<Func<T, string?>> column, int length);
 		/// <summary>
+		/// Maps a column for the byte array property with respect to the table map's class
+		/// </summary>
+		/// <param name="column">Specifies the property to map to a column</param>
+		/// <param name="length">Specifies the length of the binary column</param>
+		IColumnMap Map(Expression<Func<T, byte[]?>> column, int length);
+		/// <summary>
 		/// Maps a column for the decimal property with respect to the table map's class
 		/// </summary>
 		/// <param name="column">Specifies the property to map to a column</param>

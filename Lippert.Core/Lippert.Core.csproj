@@ -7,7 +7,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageId>Lippert.Core</PackageId>
-		<Version>0.8.1</Version>
+		<Version>0.9.0</Version>
 		<Authors>Jake Lippert</Authors>
 		<Copyright>Jake Lippert 2021</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -52,7 +52,9 @@
 - Merges now check for the presence of update column properties when building statements with updates included; an exception will be thrown describing the problem
 - NTree now has key functionality in order to retrive a sub-tree node
 0.8.1
-- Updates, deletes, and delete filters for merges now generate 'is null' when valued column maps specify a null value to filter against</PackageReleaseNotes>
+- Updates, deletes, and delete filters for merges now generate 'is null' when valued column maps specify a null value to filter against
+0.9.0
+- Byte array properties can now be mapped to varbinary columns, including support for them within merge statements</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">

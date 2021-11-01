@@ -42,6 +42,7 @@ namespace Lippert.Core.Data.QueryBuilders
 		{
 			//--Investigate if there's any way to get to a SqlMapper.TypeHandler; probably can't from this library.
 			Enum e => Convert.ChangeType(e, Enum.GetUnderlyingType(e.GetType())),
+			byte[] b => Convert.ToBase64String(b),
 			var propertyValue => propertyValue
 		};
 
@@ -71,16 +72,39 @@ namespace Lippert.Core.Data.QueryBuilders
 		}
 
 		/// <summary>
+		/// Build the column identifier for a given column map, or the correlation index identifier if none is supplied
+		/// </summary>
+		public string BuildColumnIdentifier(IColumnMap? columnMap) => columnMap switch
+		{
+			{ } column => SqlServerQueryBuilder.BuildColumnIdentifier(column),
+			_ => SqlServerMergeQueryBuilder.CorrelationIndexIdentifier
+		};
+		/// <summary>
 		/// Build the 'minification' alias to be used when parsing the serialized records
 		/// </summary>
 		public abstract string BuildColumnParserAlias(string? alias);
 		/// <summary>
 		/// Build the sql that's needed for each column defined by the openXml or openJson with(...) clause
 		/// </summary>
-		public string BuildColumnParser(IColumnMap? columnMap) => columnMap switch
+		public string BuildColumnParser(IColumnMap? columnMap)
 		{
-			{ } column => $"{SqlServerQueryBuilder.BuildColumnIdentifier(column)} {column.GetSqlType()} '{BuildColumnParserAlias(Aliases[column.Property])}'",
-			_ => $"{SqlServerMergeQueryBuilder.CorrelationIndexIdentifier} {SqlTypeLookup.GetSqlType<int>()} '{BuildColumnParserAlias(null)}'"
-		};
+			return columnMap switch
+			{
+				{ } column => $"{BuildColumnIdentifier(columnMap)} {GetSqlType(column)} '{BuildColumnParserAlias(Aliases[column.Property])}'",
+				_ => $"{BuildColumnIdentifier(columnMap)} {SqlTypeLookup.GetSqlType<int>()} '{BuildColumnParserAlias(null)}'"
+			};
+
+			static string GetSqlType(IColumnMap column)
+			{
+				if (column.Property.PropertyType == typeof(byte[]))
+				{
+					return $"{SqlTypeLookup.GetSqlType<string>()}(max)";
+				}
+				else
+				{
+					return column.GetSqlType();
+				}
+			}
+		}
 	}
 }

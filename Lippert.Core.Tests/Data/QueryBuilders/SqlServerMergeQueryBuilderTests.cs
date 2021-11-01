@@ -68,7 +68,6 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 			//--Assert
 			Console.WriteLine(serialized);
 			var queryLines = SplitQuery(query);
-			Assert.AreEqual(2/*declare table*/ + 3/*correlation*/ + 2/*key*/ + 36/*columns to update*/ + 3/*merge using correlationIndex*/ + 2/*key*/ + 2 * 36/*columns to update*/ + 2/*as source on () when matched*/ + 1/*output into*/ + 1/*select * from*/, queryLines.Length);
 			Assert.AreEqual(new[]
 			{
 "declare @outputResult table(",
@@ -115,46 +114,87 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 "  [Property10] nvarchar(max)",
 ");",
 "merge [LargeRecord] as target",
-"using (select * from openJson(@serialized) with (",
-"  [<{CorrelationIndex}>] int '$._',",
-"  [IdA] uniqueidentifier '$._0',",
-"  [IdB] uniqueidentifier '$._1',",
-"  [Property1] smallint '$._2',",
-"  [Property2] nvarchar(max) '$._3',",
-"  [Property3] nvarchar(max) '$._4',",
-"  [Property4] nvarchar(max) '$._5',",
-"  [Property5] nvarchar(max) '$._6',",
-"  [Property6] nvarchar(max) '$._7',",
-"  [Property7] nvarchar(max) '$._8',",
-"  [Property8] nvarchar(max) '$._9',",
-"  [Property9] nvarchar(max) '$._a',",
-"  [PropertyA] nvarchar(max) '$._b',",
-"  [PropertyB] nvarchar(max) '$._c',",
-"  [PropertyC] nvarchar(max) '$._d',",
-"  [PropertyD] nvarchar(max) '$._e',",
-"  [PropertyE] nvarchar(max) '$._f',",
-"  [PropertyF] nvarchar(max) '$._g',",
-"  [PropertyG] nvarchar(max) '$._h',",
-"  [PropertyH] nvarchar(max) '$._i',",
-"  [PropertyI] nvarchar(max) '$._j',",
-"  [PropertyJ] nvarchar(max) '$._k',",
-"  [PropertyK] nvarchar(max) '$._l',",
-"  [PropertyL] nvarchar(max) '$._m',",
-"  [PropertyM] nvarchar(max) '$._n',",
-"  [PropertyN] nvarchar(max) '$._o',",
-"  [PropertyO] nvarchar(max) '$._p',",
-"  [PropertyP] nvarchar(max) '$._q',",
-"  [PropertyQ] nvarchar(max) '$._r',",
-"  [PropertyR] nvarchar(max) '$._s',",
-"  [PropertyS] nvarchar(max) '$._t',",
-"  [PropertyT] nvarchar(max) '$._u',",
-"  [PropertyU] nvarchar(max) '$._v',",
-"  [PropertyV] nvarchar(max) '$._w',",
-"  [PropertyW] nvarchar(max) '$._x',",
-"  [PropertyX] nvarchar(max) '$._y',",
-"  [PropertyY] nvarchar(max) '$._z',",
-"  [PropertyZ] nvarchar(max) '$._10',",
-"  [Property10] nvarchar(max) '$._11'",
+"using (",
+"  select",
+"    [<{CorrelationIndex}>],",
+"    [IdA],",
+"    [IdB],",
+"    [Property1],",
+"    [Property2],",
+"    [Property3],",
+"    [Property4],",
+"    [Property5],",
+"    [Property6],",
+"    [Property7],",
+"    [Property8],",
+"    [Property9],",
+"    [PropertyA],",
+"    [PropertyB],",
+"    [PropertyC],",
+"    [PropertyD],",
+"    [PropertyE],",
+"    [PropertyF],",
+"    [PropertyG],",
+"    [PropertyH],",
+"    [PropertyI],",
+"    [PropertyJ],",
+"    [PropertyK],",
+"    [PropertyL],",
+"    [PropertyM],",
+"    [PropertyN],",
+"    [PropertyO],",
+"    [PropertyP],",
+"    [PropertyQ],",
+"    [PropertyR],",
+"    [PropertyS],",
+"    [PropertyT],",
+"    [PropertyU],",
+"    [PropertyV],",
+"    [PropertyW],",
+"    [PropertyX],",
+"    [PropertyY],",
+"    [PropertyZ],",
+"    [Property10]",
+"  from openJson(@serialized) with (",
+"    [<{CorrelationIndex}>] int '$._',",
+"    [IdA] uniqueidentifier '$._0',",
+"    [IdB] uniqueidentifier '$._1',",
+"    [Property1] smallint '$._2',",
+"    [Property2] nvarchar(max) '$._3',",
+"    [Property3] nvarchar(max) '$._4',",
+"    [Property4] nvarchar(max) '$._5',",
+"    [Property5] nvarchar(max) '$._6',",
+"    [Property6] nvarchar(max) '$._7',",
+"    [Property7] nvarchar(max) '$._8',",
+"    [Property8] nvarchar(max) '$._9',",
+"    [Property9] nvarchar(max) '$._a',",
+"    [PropertyA] nvarchar(max) '$._b',",
+"    [PropertyB] nvarchar(max) '$._c',",
+"    [PropertyC] nvarchar(max) '$._d',",
+"    [PropertyD] nvarchar(max) '$._e',",
+"    [PropertyE] nvarchar(max) '$._f',",
+"    [PropertyF] nvarchar(max) '$._g',",
+"    [PropertyG] nvarchar(max) '$._h',",
+"    [PropertyH] nvarchar(max) '$._i',",
+"    [PropertyI] nvarchar(max) '$._j',",
+"    [PropertyJ] nvarchar(max) '$._k',",
+"    [PropertyK] nvarchar(max) '$._l',",
+"    [PropertyL] nvarchar(max) '$._m',",
+"    [PropertyM] nvarchar(max) '$._n',",
+"    [PropertyN] nvarchar(max) '$._o',",
+"    [PropertyO] nvarchar(max) '$._p',",
+"    [PropertyP] nvarchar(max) '$._q',",
+"    [PropertyQ] nvarchar(max) '$._r',",
+"    [PropertyR] nvarchar(max) '$._s',",
+"    [PropertyS] nvarchar(max) '$._t',",
+"    [PropertyT] nvarchar(max) '$._u',",
+"    [PropertyU] nvarchar(max) '$._v',",
+"    [PropertyV] nvarchar(max) '$._w',",
+"    [PropertyW] nvarchar(max) '$._x',",
+"    [PropertyX] nvarchar(max) '$._y',",
+"    [PropertyY] nvarchar(max) '$._z',",
+"    [PropertyZ] nvarchar(max) '$._10',",
+"    [Property10] nvarchar(max) '$._11'",
 ")) as source on (target.[IdA] = source.[IdA] and target.[IdB] = source.[IdB])",
 "when matched then update set",
 "  target.[Property1] = source.[Property1],",
@@ -282,6 +322,116 @@ namespace Lippert.Core.Tests.Data.QueryBuilders
 					Assert.Throws<InvalidOperationException>(() => new SqlServerMergeQueryBuilder().Merge(out var mergeSerializer, mergeDefinition, useJson: useJson));
 					break;
 			}
+		}
+
+		[Test]
+		public void TestBuildsXmlConverterForUpdateMergeWithVarbinary()
+		{
+			//--Arrange
+			var mergeDefinition = new MergeDefinition<StoredFile>().Update();
+
+			//--Act
+			var query = new SqlServerMergeQueryBuilder().Merge(out var mergeSerializer, mergeDefinition, useJson: false);
+			var storedFiles = new[]
+			{
+				new StoredFile
+				{
+					Id = Guid.NewGuid(),
+					Name = Guid.NewGuid().ToString(),
+					FileBytes = Guid.NewGuid().ToByteArray()
+				}
+			};
+			var serialized = mergeSerializer.SerializeForMerge(storedFiles);
+
+			//--Assert
+			Console.WriteLine(serialized);
+			var queryLines = SplitQuery(query);
+			Assert.AreEqual(new[]
+			{
+"declare @outputResult table(",
+"  [CorrelationIndex] int,",
+"  [Action] nvarchar(max),",
+"  [<{Split}>] bit,",
+"  [Id] uniqueidentifier,",
+"  [Name] nvarchar(100),",
+"  [FileBytes] varbinary(max)",
+");",
+"declare @preparedDoc int;",
+"exec sp_xml_preparedocument @preparedDoc output, @serialized;",
+"merge [StoredFile] as target",
+"using (",
+"  select",
+"    [<{CorrelationIndex}>],",
+"    [Id],",
+"    [Name],",
+"    cast([FileBytes] as xml).value('xs:base64Binary(.)', 'varbinary(max)') as [FileBytes]",
+"  from openXml(@preparedDoc, '/_/_') with (",
+"    [<{CorrelationIndex}>] int '@_',",
+"    [Id] uniqueidentifier '@_0',",
+"    [Name] nvarchar(100) '@_1',",
+"    [FileBytes] nvarchar(max) '@_2'",
+")) as source on (target.[Id] = source.[Id])",
+"when matched then update set",
+"  target.[Name] = source.[Name],",
+"  target.[FileBytes] = source.[FileBytes]",
+"output source.[<{CorrelationIndex}>], $action, null, inserted.[Id], inserted.[Name], inserted.[FileBytes] into @outputResult([CorrelationIndex], [Action], [<{Split}>], [Id], [Name], [FileBytes]);",
+"select * from @outputResult;"
+			}, queryLines);
+			Assert.AreEqual($"<_><_ _=\"0\" _0=\"{storedFiles[0].Id}\" _1=\"{storedFiles[0].Name}\" _2=\"{Convert.ToBase64String(storedFiles[0].FileBytes)}\" /></_>", serialized);
+		}
+
+		[Test]
+		public void TestBuildsJsonConverterForUpdateMergeWithVarbinary()
+		{
+			//--Arrange
+			var mergeDefinition = new MergeDefinition<StoredFile>().Update();
+
+			//--Act
+			var query = new SqlServerMergeQueryBuilder().Merge(out var mergeSerializer, mergeDefinition, useJson: true);
+			var storedFiles = new[]
+			{
+				new StoredFile
+				{
+					Id = Guid.NewGuid(),
+					Name = Guid.NewGuid().ToString(),
+					FileBytes = Guid.NewGuid().ToByteArray()
+				}
+			};
+			var serialized = mergeSerializer.SerializeForMerge(storedFiles);
+
+			//--Assert
+			Console.WriteLine(serialized);
+			var queryLines = SplitQuery(query);
+			Assert.AreEqual(new[]
+			{
+"declare @outputResult table(",
+"  [CorrelationIndex] int,",
+"  [Action] nvarchar(max),",
+"  [<{Split}>] bit,",
+"  [Id] uniqueidentifier,",
+"  [Name] nvarchar(100),",
+"  [FileBytes] varbinary(max)",
+");",
+"merge [StoredFile] as target",
+"using (",
+"  select",
+"    [<{CorrelationIndex}>],",
+"    [Id],",
+"    [Name],",
+"    cast([FileBytes] as xml).value('xs:base64Binary(.)', 'varbinary(max)') as [FileBytes]",
+"  from openJson(@serialized) with (",
+"    [<{CorrelationIndex}>] int '$._',",
+"    [Id] uniqueidentifier '$._0',",
+"    [Name] nvarchar(100) '$._1',",
+"    [FileBytes] nvarchar(max) '$._2'",
+")) as source on (target.[Id] = source.[Id])",
+"when matched then update set",
+"  target.[Name] = source.[Name],",
+"  target.[FileBytes] = source.[FileBytes]",
+"output source.[<{CorrelationIndex}>], $action, null, inserted.[Id], inserted.[Name], inserted.[FileBytes] into @outputResult([CorrelationIndex], [Action], [<{Split}>], [Id], [Name], [FileBytes]);",
+"select * from @outputResult;"
+			}, queryLines);
+			Assert.AreEqual($"[{{\"_\":0,\"_0\":\"{storedFiles[0].Id}\",\"_1\":\"{storedFiles[0].Name}\",\"_2\":\"{Convert.ToBase64String(storedFiles[0].FileBytes)}\"}}]", serialized);
 		}
 	}
 }

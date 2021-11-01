@@ -28,7 +28,8 @@ namespace Lippert.Core.Data.QueryBuilders
 				[typeof(int)] = "int",
 				[typeof(long)] = "bigint",
 				[typeof(float)] = "float",
-				[typeof(string)] = "nvarchar"
+				[typeof(string)] = "nvarchar",
+				[typeof(byte[])] = "varbinary"
 			};
 			_sqlTypes = RetrievalDictionary.Build((Type type) => GetSqlType(type));
 
@@ -79,7 +80,8 @@ namespace Lippert.Core.Data.QueryBuilders
 		public static string GetSqlType(this IColumnMap columnMap)
 		{
 			var sqlType = GetSqlType(columnMap.Property.PropertyType);
-			if (columnMap.Property.PropertyType == typeof(string))
+			if (columnMap.Property.PropertyType == typeof(string) ||
+				columnMap.Property.PropertyType == typeof(byte[]))
 			{
 				return $"{sqlType}({(columnMap.Length == int.MaxValue ? "max" : columnMap.Length)})";
 			}

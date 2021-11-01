@@ -54,6 +54,20 @@ namespace Lippert.Core.Tests.Data.QueryBuilders.MergeSerializers
 		}
 
 		[Test]
+		public void TestBuildsBinaryColumnParserWithConfiguredLength()
+		{
+			//--Arrange
+			var tableMap = new StoredFileMap();
+			var mergeSerializer = new JsonMergeSerializer<StoredFile>(tableMap);
+
+			//--Act
+			var parser = mergeSerializer.BuildColumnParser(tableMap[x => x.FileBytes]);
+
+			//--Assert
+			StringAssert.StartsWith("[FileBytes] nvarchar(max) '$._", parser);
+		}
+
+		[Test]
 		public void TestBuildsDecimalColumnParserWithConfiguredPrecisionAndScale()
 		{
 			//--Arrange

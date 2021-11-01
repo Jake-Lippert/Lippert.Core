@@ -21,6 +21,10 @@ namespace Lippert.Core.Data.QueryBuilders.Contracts
 		/// </summary>
 		string SerializeForMerge(IEnumerable<T> records);
 		/// <summary>
+		/// Build the column identifier for a given column map, or the correlation index identifier if none is supplied
+		/// </summary>
+		string BuildColumnIdentifier(Data.Contracts.IColumnMap? columnMap);
+		/// <summary>
 		/// Builds a parser for the specified column in order to deserialize the 'minified' representation into something that can be easily used within merge statements
 		/// </summary>
 		string BuildColumnParser(Data.Contracts.IColumnMap? columnMap);

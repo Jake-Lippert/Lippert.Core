@@ -70,10 +70,23 @@ namespace Lippert.Core.Data.QueryBuilders
 				yield return "";
 			}
 
+			var sourceColumns = (mergeDefinition.IncludeInsert, mergeDefinition.IncludeUpdate, mergeDefinition.IncludeDelete) switch
+			{
+				(true, false, _) => tableMap.KeyColumns.Union(tableMap.InsertColumns).ToList(),
+				(true, true, _) => tableMap.KeyColumns.Union(tableMap.UpsertColumns).ToList(),
+				(false, true, _) => tableMap.KeyColumns.Union(tableMap.UpdateColumns).ToList(),
+				(false, false, true) => tableMap.KeyColumns,
+				_ => throw new ArgumentException("At least one of insert, update, or delete must be included in the merge."),
+			};
+
 			//--merge [Table] as target
 			//	using (......) as source on (target.[Key] = source.[Key])
 			yield return $"merge {BuildTableIdentifier(mergeSerializer.TableMap)} as target";
-			yield return @$"using (select * from open{mergeSerializer switch
+			yield return "using (";
+			yield return "  select";
+			yield return string.Join($",{Environment.NewLine}", BuildColumnSelects());
+
+			yield return @$"  from open{mergeSerializer switch
 			{
 				JsonMergeSerializer<T> _ => "Json(@serialized)",
 				XmlMergeSerializer<T> _ => "Xml(@preparedDoc, '/_/_')",
@@ -82,24 +95,34 @@ namespace Lippert.Core.Data.QueryBuilders
 			yield return string.Join($",{Environment.NewLine}", BuildColumnParsers());
 			yield return $")) as source on ({string.Join(" and ", BuildJoinConditions())})";
 
+			IEnumerable<string> BuildColumnSelects()
+			{
+				yield return FormatColumnSelect(null);
+				
+				foreach (var sourceColumn in sourceColumns)
+				{
+					yield return FormatColumnSelect(sourceColumn);
+				}
+
+				string FormatColumnSelect(IColumnMap? columnMap)
+				{
+					var columnIdentifier = mergeSerializer.BuildColumnIdentifier(columnMap);
+					var binaryAdjustment = columnMap?.Property.PropertyType == typeof(byte[]) ?
+						$"cast({columnIdentifier} as xml).value('xs:base64Binary(.)', 'varbinary(max)') as " :
+						"";
+					return $"    {binaryAdjustment}{columnIdentifier}";
+				}
+			}
 			IEnumerable<string> BuildColumnParsers()
 			{
 				yield return FormatColumnParser(null);
 
-				var sourceColumns = (mergeDefinition.IncludeInsert, mergeDefinition.IncludeUpdate, mergeDefinition.IncludeDelete) switch
-				{
-					(true, false, _) => tableMap.KeyColumns.Union(tableMap.InsertColumns).ToList(),
-					(true, true, _) => tableMap.KeyColumns.Union(tableMap.UpsertColumns).ToList(),
-					(false, true, _) => tableMap.KeyColumns.Union(tableMap.UpdateColumns).ToList(),
-					(false, false, true) => tableMap.KeyColumns,
-					_ => throw new ArgumentException("At least one of insert, update, or delete must be included in the merge."),
-				};
 				foreach (var sourceColumn in sourceColumns)
 				{
 					yield return FormatColumnParser(sourceColumn);
 				}
 
-				string FormatColumnParser(IColumnMap? columnMap) => $"  {mergeSerializer.BuildColumnParser(columnMap)}";
+				string FormatColumnParser(IColumnMap? columnMap) => $"    {mergeSerializer.BuildColumnParser(columnMap)}";
 			}
 			IEnumerable<string> BuildJoinConditions()
 			{

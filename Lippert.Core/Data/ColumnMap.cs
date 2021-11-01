@@ -25,6 +25,11 @@ namespace Lippert.Core.Data
 		{
 			Length = length;
 		}
+		internal ColumnMap(Expression<Func<T, byte[]?>> column, int length)
+			: this(PropertyAccessor.Get(column))
+		{
+			Length = length;
+		}
 		internal ColumnMap(Expression<Func<T, decimal?>> column, int precision, int scale)
 			: this(PropertyAccessor.Get(column))
 		{

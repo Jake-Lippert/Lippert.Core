@@ -137,6 +137,10 @@ namespace Lippert.Core.Data
 		/// <summary>
 		/// Maps a column for the property with respect to the table map's class
 		/// </summary>
+		public IColumnMap Map(Expression<Func<T, byte[]?>> column, int length) => Map(new ColumnMap<T>(column ?? throw new ArgumentNullException(nameof(column)), length));
+		/// <summary>
+		/// Maps a column for the property with respect to the table map's class
+		/// </summary>
 		public IColumnMap Map(Expression<Func<T, decimal?>> column, int precision, int scale) => Map(new ColumnMap<T>(column ?? throw new ArgumentNullException(nameof(column)), precision, scale));
 		/// <summary>
 		/// Maps a column for the property with respect to the table map's class
